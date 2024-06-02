@@ -21,9 +21,9 @@ internal Quad scale_quad(Quad q, f32 scale) {
 
 internal Vec3f32 quad_get_center(Quad q) {
   Vec3f32 result = {
-    (q.p0.x + q.p1.x + q.p2.x + q.p3.x ) / 4.0,
-    (q.p0.y + q.p1.y + q.p2.y + q.p3.y ) / 4.0,
-    (q.p0.z + q.p1.z + q.p2.z + q.p3.z ) / 4.0,
+    (q.p0.x + q.p1.x + q.p2.x + q.p3.x ) / 4.0f,
+    (q.p0.y + q.p1.y + q.p2.y + q.p3.y ) / 4.0f,
+    (q.p0.z + q.p1.z + q.p2.z + q.p3.z ) / 4.0f,
   };
   return result;
 }

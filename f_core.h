@@ -137,7 +137,12 @@
 # error Endianness of this architecture not understood by context cracker.
 #endif
 
-// Zero All Undefined Options
+//~ Zero All Undefined Options
+// Build options
+#if !defined(IS_COMMAND_LINE_PROGRAM)
+#define IS_COMMAND_LINE_PROGRAM 0
+#endif
+// Architecture
 #if !defined(ARCH_32BIT)
 # define ARCH_32BIT 0
 #endif
@@ -156,6 +161,7 @@
 #if !defined(ARCH_ARM32)
 # define ARCH_ARM32 0
 #endif
+// Compiler
 #if !defined(COMPILER_MSVC)
 # define COMPILER_MSVC 0
 #endif
@@ -165,6 +171,7 @@
 #if !defined(COMPILER_CLANG)
 # define COMPILER_CLANG 0
 #endif
+// Operating system
 #if !defined(OS_WINDOWS)
 # define OS_WINDOWS 0
 #endif
@@ -245,10 +252,10 @@
 #define Member(T,m) (((T*)0)->m)
 #define OffsetOfMember(T,m) IntFromPtr(&Member(T,m))
 
-#define Kilobytes(n) ((u64)(n * 1024))
-#define Megabytes(n) ((u64)(n * 1024 * 1024))
-#define Gigabytes(n) ((u64)(n * 1024 * 1024 * 1024))
-#define Terabytes(n) ((u64)(n * 1024 * 1024 * 1024 * 1024))
+#define Kilobytes(n) ((u64)(n * 1024llu))
+#define Megabytes(n) ((u64)(n * 1024llu * 1024llu))
+#define Gigabytes(n) ((u64)(n * 1024llu * 1024llu * 1024llu))
+#define Terabytes(n) ((u64)(n * 1024llu * 1024llu * 1024llu * 1024llu))
 
 #define Thousand(n) ((n)*1000)
 #define Million(n)  ((n)*1000000llu)

@@ -1,6 +1,14 @@
 #ifndef F_INCLUDES_H
 #define F_INCLUDES_H
 
+/*
+
+Build options:
+
+IS_COMMAND_LINE_PROGRAM: Is the program a CLI app or a os native app
+
+*/
+
 //~ CLib
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,7 +24,8 @@
 #include "f_memory.h"
 #include "f_string.h"
 #include "f_thread_context.h"
-#include "f_os/f_os.h"
+#include "f_os/f_os_include.h"
+#include "f_entry.h"
 
 //~ Extern
 #define STB_SPRINTF_IMPLEMENTATION
@@ -27,6 +36,7 @@
 #include "f_memory.c"
 #include "f_string.c"
 #include "f_thread_context.c"
-#include "f_os/f_os.c"
+#include "f_os/f_os_include.c"
+#include "f_entry.c"
 
 #endif // F_INCLUDES_H

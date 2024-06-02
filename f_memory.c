@@ -1,110 +1,123 @@
-
-internal Arena* arena_init() {
-  Arena* arena = arena_init_sized(ARENA_RESERVE_SIZE, ARENA_COMMIT_SIZE);
+internal Arena*
+arena_alloc(u64 size) {
+  u64 size_roundup_granularity = Megabytes(64);
+  size += size_roundup_granularity-1;
+  size -= size%size_roundup_granularity;
+  void* block = os_memory_reserve(size);
+  u64 initial_commit_size = ARENA_COMMIT_GRANULARITY;
+  Assert(initial_commit_size >= sizeof(Arena));
+  os_memory_commit(block, initial_commit_size);
+  Arena* arena = (Arena*)block;
+  arena->pos = sizeof(Arena);
+  arena->commit_pos = initial_commit_size;
+  arena->align = 8;
+  arena->size = size;
   return arena;
 }
 
-internal Arena* arena_init_sized(u64 reserve, u64 commit) {
-  void* memory = NULL;
-  
-  u64 page_size = os_memory_get_page_size();
-  reserve = AlignPow2(reserve, page_size);
-  commit  = AlignPow2(commit,  page_size);
-  
-  Assert(ARENA_HEADER_SIZE < commit && commit <= reserve);
-  
-  memory  = os_memory_reserve(reserve);
-  if(!os_memory_commit(memory, commit)) {
-    memory = NULL;
-    os_memory_release(memory, reserve);
-  }
-  
-  Arena* arena = (Arena*) memory;
-  
-  if (arena) {
-    arena->reserved    = reserve;
-    arena->commited    = commit;
-    arena->commit_size = commit;
-    arena->position    = ARENA_HEADER_SIZE;
-    arena->align       = DEFAULT_ALIGNMENT;
+internal Arena*
+arena_alloc_default() {
+  Arena* arena = arena_alloc(Gigabytes(8));
+  return arena;
+}
+
+internal void
+arena_release(Arena* arena) {
+  os_memory_release(arena, arena->size);
+}
+
+internal void *
+arena_push_no_zero(Arena* arena, u64 size) {
+  void* result = 0;
+  if(arena->pos + size <= arena->size) {
+    u8 *base = (u8 *)arena;
+    u64 post_align_pos = (arena->pos + (arena->align-1));
+    post_align_pos -= post_align_pos%arena->align;
+    u64 align = post_align_pos - arena->pos;
+    result = base + arena->pos + align;
+    arena->pos += size + align;
+    if(arena->commit_pos < arena->pos) {
+      u64 size_to_commit = arena->pos - arena->commit_pos;
+      size_to_commit += ARENA_COMMIT_GRANULARITY - 1;
+      size_to_commit -= size_to_commit%ARENA_COMMIT_GRANULARITY;
+      os_memory_commit(base + arena->commit_pos, size_to_commit);
+      arena->commit_pos += size_to_commit;
+    }
   } else {
-    printf("Error setting arena's memory");
+    // TODO(fz): Fallback strategy
     Assert(0);
   }
-  
-  return arena;
+  return result;
 }
 
-internal void* arena_push(Arena* arena, u64 size) {
-  void* result = arena_push_no_zero(arena, size);
+internal void *
+arena_push_aligned(Arena *arena, u64 alignment) {
+  u64 pos = arena->pos;
+  u64 pos_rounded_up = pos + alignment-1;
+  pos_rounded_up -= pos_rounded_up%alignment;
+  u64 size_to_alloc = pos_rounded_up - pos;
+  void *result = 0;
+  if(size_to_alloc != 0) {
+    result = arena_push_no_zero(arena, size_to_alloc);
+  }
+  return result;
+}
+
+internal void *
+arena_push(Arena *arena, u64 size) {
+  void *result = arena_push_no_zero(arena, size);
   MemoryZero(result, size);
   return result;
 }
 
-internal void* arena_push_no_zero(Arena* arena, u64 size) {
-  u64 position_memory = AlignPow2(arena->position, arena->align);
-  u64 new_position    = position_memory + size;
-  
-  if (arena->commited < new_position) {
-    u64 commit_aligned = AlignPow2(new_position, arena->commit_size);
-    u64 commit_clamped = ClampTop(commit_aligned, arena->reserved);
-    u64 commit_size    = commit_clamped - arena->commited;
-    if (os_memory_commit((u8*)arena + arena->commited, commit_size)) {
-      arena->commited = commit_clamped;
-    } else {
-      printf("Could not commit memory when increasing the arena's committed memory.");
-      Assert(0);
-    }
+internal void
+arena_pop_to(Arena *arena, u64 pos) {
+  u64 min_pos = sizeof(Arena);
+  u64 new_pos = Max(min_pos, pos);
+  arena->pos = new_pos;
+  u64 pos_aligned_to_commit_chunks = arena->pos + ARENA_COMMIT_GRANULARITY-1;
+  pos_aligned_to_commit_chunks -= pos_aligned_to_commit_chunks%ARENA_COMMIT_GRANULARITY;
+  if(pos_aligned_to_commit_chunks + ARENA_DECOMMIT_THRESHOLD <= arena->commit_pos) {
+    u8 *base = (u8 *)arena;
+    u64 size_to_decommit = arena->commit_pos-pos_aligned_to_commit_chunks;
+    os_memory_decommit(base + pos_aligned_to_commit_chunks, size_to_decommit);
+    arena->commit_pos -= size_to_decommit;
   }
-  
-  void* memory = NULL;
-  
-  memory = (u8*)arena + position_memory;;
-  arena->position = new_position;
-  
-  return memory;
 }
 
-internal void  arena_pop(Arena* arena, u64 size) {
-  if (size > arena->position) {
-    printf("Warning :: Arena :: Trying to pop %lld bytes from arena with %lld allocated. Will pop %lld instead of %lld.\n", size, arena->position, arena->position, size);
-    size = arena->position;
-  }
-  arena->position -= size;
+internal void
+arena_set_auto_align(Arena *arena, u64 align) {
+  arena->align = align;
 }
 
-internal void  arena_pop_to(Arena* arena, u64 pos) {
-  if (pos > arena->reserved) {
-    printf("Warning :: Arena :: Trying to pop over arena's reserved. Will pop only to %lld instead of %lld", arena->reserved, pos);
-    pos = arena->reserved;
-  } else if (pos < 0) {
-    printf("Warning :: Arena :: Trying to pop negative values. Will pop to 0");
-    pos = 0;
-  }
-  arena->position = pos;
+internal void
+arena_pop(Arena *arena, u64 size) {
+  u64 min_pos = sizeof(Arena);
+  u64 size_to_pop = Min(size, arena->pos);
+  u64 new_pos = arena->pos - size_to_pop;
+  new_pos = Max(new_pos, min_pos);
+  arena_pop_to(arena, new_pos);
 }
 
-internal void  arena_clear(Arena* arena) {
-  arena_pop(arena, arena->position);
+internal void
+arena_clear(Arena *arena) {
+  arena_pop_to(arena, sizeof(Arena));
 }
 
-internal void  arena_free(Arena* arena) {
-  os_memory_release((u8*)arena, arena->reserved);
+internal u64
+arena_pos(Arena *arena) {
+  return arena->pos;
 }
 
-internal void arena_print(Arena *arena) {
-  f32 committed_percentage = ((double)arena->position / arena->commited) * 100.0;
-  printf("Arena { reserved: %llu, commited: %llu, commit_size: %llu, position: %llu, align: %llu, committed_percentage: %.2f%% }\n",
-         arena->reserved, arena->commited, arena->commit_size, arena->position, arena->align, committed_percentage);
-}
-
-internal Arena_Temp arena_temp_begin(Arena* arena) {
-  Arena_Temp temp;
+internal Arena_Temp
+arena_temp_begin(Arena *arena) {
+  Arena_Temp temp = {0};
   temp.arena = arena;
-  temp.temp_position = arena->position;
+  temp.pos = arena->pos;
   return temp;
 }
 
-internal void arena_temp_end(Arena_Temp* temp) {
-  arena_pop_to(temp->arena, temp->temp_position);
+internal void
+arena_temp_end(Arena_Temp temp) {
+  arena_pop_to(temp.arena, temp.pos);
 }

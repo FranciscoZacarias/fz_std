@@ -108,10 +108,10 @@ internal b32 cast_string_to_f32(String str, f32* value) {
 }
 
 internal b32 cast_string_to_s32(String str, s32* value) {
-	*value = 0.0f;
+	*value = 0;
 	for (u64 i = 0; i < str.size; i++) {
 		if (str.str[i] >= '0'  && str.str[i] <= '9') {
-			*value = *value * 10.0f + (str.str[i] - '0');
+			*value = *value * 10 + (str.str[i] - '0');
 		} else {
 			return 0;
 		}
