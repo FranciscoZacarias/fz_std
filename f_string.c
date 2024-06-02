@@ -1,23 +1,28 @@
-internal String string_new(u64 size, u8* str) {
+internal String
+string_new(u64 size, u8* str) {
   String result = { size, str };
   return result;
 }
 
-internal String string_fmt(String fmt, ...) {
+internal String
+string_fmt(String fmt, ...) {
   
 }
 
-internal String string_range(u8* first, u8* range) {
+internal String
+string_range(u8* first, u8* range) {
   String result = (String){(u64)(range - first), first};
   return result;
 }
 
-internal String string_pop_left(String str) {
+internal String
+string_pop_left(String str) {
   String result = string_new(str.size-1, str.str+1);
   return result;
 }
 
-internal String string_pop_right(String str) {
+internal String
+string_pop_right(String str) {
   String result = string_new(str.size-1, str.str);
   return result;
 }
