@@ -3,8 +3,8 @@
 #define F_MATH_H
 
 #define PI 3.14159265358979323846f
-#define Degrees(r) (r * (180 / PI))
-#define Radians(d) (d * (PI / 180))
+#define DegreesFromRadians(r) (r * (180 / PI))
+#define RadiansFromDegrees(d) (d * (PI / 180))
 
 typedef struct Vec2f32 {
 	union {
