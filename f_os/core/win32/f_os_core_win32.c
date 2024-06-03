@@ -17,7 +17,18 @@ int WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR lp_cmd_line, int 
 //~ Init
 internal void
 os_init() {
-  
+  Arena* arena = arena_alloc(Gigabytes(1));
+  OSWin32State = PushArray(arena, OS_Win32_State, 1);
+  OSWin32State->arena = arena;
+  OSWin32State->advapi_dll = LoadLibraryA("advapi32.dll");
+  if(OSWin32State->advapi_dll) {
+   *(FARPROC *)&RtlGenRandom = GetProcAddress(OSWin32State->advapi_dll, "SystemFunction036");
+  }
+
+  GetSystemInfo(&OSWin32State->system_info);
+  QueryPerformanceFrequency(&OSWin32State->counts_per_second);
+
+  OSWin32State->granular_sleep_enabled = (timeBeginPeriod(1) == TIMERR_NOERROR);
 }
 
 //~ Window

@@ -19,7 +19,6 @@ typedef struct String_List {
 } String_List;
 
 //~ String Functions
-
 #define StringLiteral(s) (String){sizeof(s)-1, (u8*)(s)}
 internal String string_new(u64 size, u8* str);
 internal String string_fmt(String fmt, ...);
@@ -36,7 +35,6 @@ internal b32 cast_string_to_s32(String str, s32* value);
 internal b32 cast_string_to_b32(String str, b32* value);
 
 //~ Char Functions
-
 internal b32 char_is_alpha(u8 c);
 internal b32 char_is_alpha_upper(u8 c);
 internal b32 char_is_alpha_lower(u8 c);
