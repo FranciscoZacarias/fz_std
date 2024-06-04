@@ -8,7 +8,7 @@ typedef struct Thread_Context {
   u64 thread_name_size;
 } Thread_Context;
 
-thread_static Thread_Context* _ThreadContextLocal = 0;
+thread_static Thread_Context* ThreadContextLocal = 0;
 
 internal Thread_Context  thread_context_alloc();
 internal void            thread_context_release(Thread_Context *tctx);

@@ -181,6 +181,18 @@
 #if !defined(OS_MAC)
 # define OS_MAC 0
 #endif
+#if !defined(ASAN_ENABLED)
+# define ASAN_ENABLED 0
+#endif
+
+#if ASAN_ENABLED && COMPILER_MSVC
+# define no_asan __declspec(no_sanitize_address)
+#elif ASAN_ENABLED && (COMPILER_CLANG || COMPILER_GCC)
+# define no_asan __attribute__((no_sanitize("address")))
+#endif
+#if !defined(no_asan)
+# define no_asan
+#endif
 
 #if COMPILER_MSVC
 # define thread_static __declspec(thread)
@@ -193,6 +205,28 @@
 #else
 # define shared_function C_LINKAGE
 #endif
+
+#if OS_WINDOWS
+# pragma section(".roglob", read)
+# define read_only no_asan __declspec(allocate(".roglob"))
+#else
+# define read_only
+#endif
+
+#if COMPILER_MSVC
+# define per_thread __declspec(thread)
+#elif COMPILER_CLANG
+# define per_thread __thread
+#elif COMPILER_GCC
+# define per_thread __thread
+#endif
+
+#if COMPILER_MSVC && COMPILER_MSVC_YEAR < 2015
+# define inline_internal static
+#else
+# define inline_internal inline static
+#endif
+
 
 #if LANG_CPP
 # define C_LINKAGE_BEGIN extern "C"{
@@ -268,6 +302,13 @@
 #define IsPow2(x)          ((x)!=0 && ((x)&((x)-1))==0)
 #define IsPow2OrZero(x)    ((((x) - 1)&(x)) == 0)
 
+#define Swap(type, a, b) do{ type _swapper_ = a; a = b; b = _swapper_; }while(0)
+
+#define AbsoluteValueS32(x) (s32)abs((x))
+#define AbsoluteValueS64(x) (s64)llabs((s64)(x))
+#define AbsoluteValueU32(x) (u32)abs((x))
+#define AbsoluteValueU64(x) (u64)llabs((u64)(x))
+
 #define MemoryCopy(dest,value,size)  memmove((dest),(value),(size))
 #define MemoryCopyStruct(dest,value) MemoryCopy((dest),(value), Min(sizeof(*(dest)), sizeof(*(size))))
 #define MemoryZero(s,z)            memset((s),0,(z))
@@ -275,9 +316,9 @@
 #define MemorySet(dest,value,size) memset((dest),(value),(size))
 #define MemoryMatch(a,b,z)        (memcmp((a),(b),(z)) == 0)
 
-#define local_persist static
-#define global        static
-#define internal      static
+#define local_persist   static
+#define global          static
+#define internal        static
 
 ////////////////////////////////
 // Types 
@@ -317,5 +358,49 @@ typedef double f64;
 
 typedef s8  b8;
 typedef s32 b32;
+
+typedef struct DateTime {
+  u16 year;
+  u8 month;         // [1,  12]
+  u8 day_of_week;   // [0,   6]
+  u8 day;           // [1,  31]
+  u8 hour;          // [0,  23]
+  u8 minute;        // [0,  59]
+  u8 second;        // [0,  59]
+  u16 milliseconds; // [0, 999]
+} DateTime;
+
+inline_internal b32
+date_time_match(DateTime a, DateTime b) {
+  return (a.year == b.year &&
+          a.month == b.month &&
+          a.day_of_week == b.day_of_week &&
+          a.day == b.day &&
+          a.hour == b.hour &&
+          a.minute == b.minute &&
+          a.second == b.second &&
+          a.milliseconds == b.milliseconds);
+}
+
+inline_internal b32
+date_time_less_than(DateTime a, DateTime b) {
+  b32 result = 0;
+  if (0){}
+  else if (a.year < b.year) { result = 1; }
+  else if (a.year > b.year) { result = 0; }
+  else if (a.month < b.month) { result = 1; }
+  else if (a.month > b.month) { result = 0; }
+  else if (a.day < b.day) { result = 1; }
+  else if (a.day > b.day) { result = 0; }
+  else if (a.hour < b.hour) { result = 1; }
+  else if (a.hour > b.hour) { result = 0; }
+  else if (a.minute < b.minute) { result = 1; }
+  else if (a.minute > b.minute) { result = 0; }
+  else if (a.second < b.second) { result = 1; }
+  else if (a.second > b.second) { result = 0; }
+  else if (a.milliseconds < b.milliseconds) { result = 1; }
+  else if (a.milliseconds > b.milliseconds) { result = 0; }
+  return result;
+}
 
 #endif // F_CORE_H

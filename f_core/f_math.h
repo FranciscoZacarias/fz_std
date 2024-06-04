@@ -44,45 +44,20 @@ typedef struct Mat4f32 {
     f32 data[4][4];
     struct {
       f32 m0, m4, m8,  m12,
-      m1, m5, m9,  m13,
-      m2, m6, m10, m14,
-      m3, m7, m11, m15;
+          m1, m5, m9,  m13,
+          m2, m6, m10, m14,
+          m3, m7, m11, m15;
     };
   };
 } Mat4f32;
 
-//~ Quad
-typedef struct Quad {
-  Vec3f32 p0;
-  Vec3f32 p1;
-  Vec3f32 p2;
-  Vec3f32 p3;
-} Quad;
-
-internal Quad transform_quad(Quad q, Mat4f32 m);
-internal Quad scale_quad(Quad q, f32 scale);
-internal Vec3f32 quad_get_center(Quad q);
-
-// NOTE(fz): This defines a 2D Quad where (x,y) are the bottom left point of the quad!
-typedef struct Quad2D {
-  f32 x;
-  f32 y;
-  f32 width;
-  f32 height;
-} Quad2D;
-
-b32 quad2d_contains_point(Quad2D a, Vec2f32 p);
-b32 quad2d_overlaps(Quad2D a, Quad2D b);
-b32 quad2d_fully_contained_by_qad2d(Quad2D a, Quad2D b);
-Quad2D quad2d_get_overlap(Quad2D a, Quad2D b);
-Quad2D quad2d_uv_cull(Quad2D quad, Quad2D uv, Quad2D cull_quad);
-
-typedef struct Linef32 {
-  Vec3f32 point;
-  Vec3f32 direction;
-} Linef32;
-
-internal Linef32 linef32(Vec3f32 point, Vec3f32 direction);
+typedef union RingBuffer1U64 {
+  struct {
+    u64 min;
+    u64 max;
+  };
+  u64 v[2];
+} RingBuffer1U64;
 
 internal Vec2f32 vec2f32(f32 x, f32 y);
 internal f32 distance_vec2f32(Vec2f32 a, Vec2f32 b);
@@ -90,7 +65,6 @@ internal f32 signed_distance_vec2f32(Vec2f32 a, Vec2f32 b, Vec2f32 reference);
 
 internal Vec3f32 vec3f32(f32 x, f32 y, f32 z);
 internal Vec3f32 vec3f32_from_vec4f32(Vec4f32 v); /* Discards the w value */
-internal void print_vec3f32(Vec3f32 v, const char* label);
 
 internal Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b);
 internal Vec3f32 sub_vec3f32(Vec3f32 a, Vec3f32 b);
@@ -151,7 +125,14 @@ internal Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
 
 internal f32 clampf32(f32 value, f32 min, f32 max);
 internal f32 lerpf32(f32 start, f32 end, f32 t);
-internal b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c);
-internal Vec3f32 intersect_line_with_plane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3);
+
+internal RingBuffer1U64 ringbufer1u64(u64 min, u64 max);
+internal RingBuffer1U64 pad1u64(RingBuffer1U64 r, u64 x);
+internal u64            center1u64(RingBuffer1U64 r);
+internal b32            contains1u64(RingBuffer1U64 r, u64 v);
+internal u64            dim1u64(RingBuffer1U64 r);
+internal RingBuffer1U64 union1u64(RingBuffer1U64 a, RingBuffer1U64 b);
+internal RingBuffer1U64 intersection1u64(RingBuffer1U64 a, RingBuffer1U64 b);
+internal u64            clamp1u64(RingBuffer1U64 r, u64 v);
 
 #endif // F_MATH_H

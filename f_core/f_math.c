@@ -1,96 +1,4 @@
 
-internal Quad transform_quad(Quad q, Mat4f32 m) {
-	Quad result = {
-		mul_vec3f32_mat4f32(q.p0, m),
-		mul_vec3f32_mat4f32(q.p1, m),
-		mul_vec3f32_mat4f32(q.p2, m),
-		mul_vec3f32_mat4f32(q.p3, m),
-	};
-	return result;
-}
-
-internal Quad scale_quad(Quad q, f32 scale) {
-	Quad result = {
-		scale_vec3f32(q.p0, scale),
-		scale_vec3f32(q.p1, scale),
-		scale_vec3f32(q.p2, scale),
-		scale_vec3f32(q.p3, scale)
-	};
-	return result;
-}
-
-internal Vec3f32 quad_get_center(Quad q) {
-  Vec3f32 result = {
-    (q.p0.x + q.p1.x + q.p2.x + q.p3.x ) / 4.0f,
-    (q.p0.y + q.p1.y + q.p2.y + q.p3.y ) / 4.0f,
-    (q.p0.z + q.p1.z + q.p2.z + q.p3.z ) / 4.0f,
-  };
-  return result;
-}
-
-b32 quad2d_contains_point(Quad2D a, Vec2f32 p) {
-  b32 result = 
-    a.x <= p.x &&
-    a.y <= p.y &&
-    a.x + a.width  >= p.x &&
-    a.y + a.height >= p.y;
-  return result;
-}
-
-b32 quad2d_overlaps(Quad2D a, Quad2D b) {
-  b32 x = 
-  (a.x >= b.x && a.x <= b.x + b.width) ||
-  (a.x + a.width >= b.x && a.x + a.width <= b.x + b.width) ||
-  (a.x <= b.x && a.x + a.width >= b.x + b.width);
-  b32 y = 
-  (a.y >= b.y && a.y <= b.y + b.height) ||
-  (a.y + a.height >= b.y && a.y + a.height <= b.y + b.height) ||
-  (a.y <= b.y && a.y + a.height >= b.y + b.height);
-  return x && y;
-}
-
-b32 quad2d_fully_contained_by_quad2d(Quad2D a, Quad2D b) {
-  b32 x = 
-  (a.x >= b.x && a.x <= b.x + b.width) && 
-  (a.x + a.width >= b.x && a.x + a.width <= b.x + b.width);
-  b32 y =
-  (a.y >= b.y && a.y <= b.y + b.height) && 
-  (a.y + a.height >= b.y && a.y + a.height <= b.y + b.height);
-  return x && y;
-}
-
-Quad2D quad2d_get_overlap(Quad2D a, Quad2D b) {
-  Vec2f32 min = vec2f32(Max(a.x, b.x), Max(a.y, b.y));
-  Vec2f32 max = vec2f32(Min(a.x + a.width, b.x + b.width), Min(a.y + a.height, b.y + b.height));
-  Quad2D result = {
-    min.x, min.y,
-    max.x - min.x, max.y - min.y,
-  };
-  return result;
-}
-
-Quad2D quad2d_uv_cull(Quad2D quad, Quad2D uv, Quad2D cull_quad) {
-  if (!quad2d_overlaps(quad, cull_quad) || quad2d_fully_contained_by_quad2d(quad, cull_quad)) {
-    return uv;
-  }
-  
-  b32 x_shift_constant = !(quad.x >= cull_quad.x && quad.x <= cull_quad.x + cull_quad.width);
-  b32 y_shift_constant = !(quad.y >= cull_quad.y && quad.y <= cull_quad.y + cull_quad.height);
-  
-  f32 uv_xratio = uv.width / quad.width;
-  f32 uv_yratio = uv.height / quad.height;
-  Quad2D overlap = quad2d_get_overlap(quad, cull_quad);
-  f32 culled_x = uv.x + (quad.width - overlap.width) * uv_xratio * x_shift_constant;
-  f32 culled_y = uv.y + (quad.height - overlap.height) * uv_yratio * y_shift_constant;
-  f32 culled_w = overlap.width * uv_xratio;
-  f32 culled_h = overlap.height * uv_yratio;
-  return (Quad2D) { culled_x, culled_y, culled_w, culled_h };
-}
-
-internal Linef32 linef32(Vec3f32 point, Vec3f32 direction) {
-  Linef32 result = {point, direction};
-	return result;
-}
 
 internal Vec2f32 vec2f32(f32 x, f32 y) {
 	Vec2f32 result = {x, y};
@@ -130,10 +38,6 @@ internal Vec3f32 vec3f32(f32 x, f32 y, f32 z) {
 internal Vec3f32 vec3f32_from_vec4f32(Vec4f32 v) {
 	Vec3f32 result = { v.x, v.y, v.z };
 	return result;
-}
-
-internal void print_vec3f32(Vec3f32 v, const char* label) {
-	printf("%sVec3f32(%.2ff, %.2ff, %.2ff)\n", label, v.x, v.y, v.z);
 }
 
 internal Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b) {
@@ -934,50 +838,37 @@ internal f32 lerpf32(f32 start, f32 end, f32 t) {
 	return result;
 }
 
-internal b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c) {
-	b32 result = 0;
-  
-	Vec3f32 ab = sub_vec3f32(a, b);
-	Vec3f32 bc = sub_vec3f32(b, c);
-	Vec3f32 ap = sub_vec3f32(a, p);
-	Vec3f32 bp = sub_vec3f32(b, p);
-  
-	f32 abap = dot_vec3f32(ab, ap);
-	f32 abab = dot_vec3f32(ab, ab);
-	f32 bcbp = dot_vec3f32(bc, bp);
-	f32 bcbc = dot_vec3f32(bc, bc);
-  
-	if (0 <= abap && abap <= abab && 0 <= bcbp && bcbp <= bcbc) {
-		result = 1;
+internal RingBuffer1U64 ringbufer1u64(u64 min, u64 max) {
+	RingBuffer1U64 result = { min, max };
+	if(result.max < result.min) {
+		Swap(u64, result.min, result.max);
 	}
-  
 	return result;
 }
-\
-internal Vec3f32 intersect_line_with_plane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
-	Vec3f32 result   = vec3f32(F32_MAX, F32_MAX, F32_MAX);
-	Vec3f32 plane_v1 = vec3f32(point2.x-point1.x, point2.y-point1.y, point2.z-point1.z);
-	Vec3f32 plane_v2 = vec3f32(point3.x-point1.x, point3.y-point1.y, point3.z-point1.z);
-	Vec3f32 plane_normal = vec3f32(plane_v1.y*plane_v2.z - plane_v1.z*plane_v2.y,
-																 plane_v1.z*plane_v2.x - plane_v1.x*plane_v2.z,
-																 plane_v1.x*plane_v2.y - plane_v1.y*plane_v2.x);
-	f32 dot = dot_vec3f32(line.direction, plane_normal);
-  
-	// If the dot product is close to zero, the line is parallel to the plane
-	if (fabs(dot) < 0.000001f) {
-    return result;
-	}
-  
-	// Calculate the vector from a point on the line to a point on the plane
-	Vec3f32 lineToPlane = vec3f32(point1.x-line.point.x, point1.y-line.point.y, point1.z-line.point.z);
-  
-	// Calculate the distance along the line to the intersection point
-	f32 t = (lineToPlane.x*plane_normal.x + lineToPlane.y*plane_normal.y + lineToPlane.z*plane_normal.z) / dot;
-  
-	// Calculate the intersection point
-	result = vec3f32(line.point.x + t * line.direction.x,
-                   line.point.y + t * line.direction.y,
-                   line.point.z + t * line.direction.z);
-  
-	return result;
+internal RingBuffer1U64 pad1u64(RingBuffer1U64 r, u64 x) {
+	return ringbufer1u64(r.min-x, r.max+x);
+}
+
+internal u64 center1u64(RingBuffer1U64 r) {
+	return (r.min + r.max)/2;
+}
+
+internal b32 contains1u64(RingBuffer1U64 r, u64 v) {
+	return r.min <= v && v < r.max;
+}
+
+internal u64 dim1u64(RingBuffer1U64 r) {
+	return (r.max - r.min);
+}
+
+internal RingBuffer1U64 union1u64(RingBuffer1U64 a, RingBuffer1U64 b) {
+	return ringbufer1u64(Min(a.min, b.min), Max(a.max, b.max));
+}
+
+internal RingBuffer1U64 intersection1u64(RingBuffer1U64 a, RingBuffer1U64 b) {
+	return ringbufer1u64(Max(a.min, b.min), Min(a.max, b.max));
+}
+
+internal u64 clamp1u64(RingBuffer1U64 r, u64 v) {
+	v = Clamp(r.min, v, r.max); return v;
 }

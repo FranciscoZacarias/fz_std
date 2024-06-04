@@ -17,12 +17,12 @@ thread_context_release(Thread_Context *tctx) {
 
 internal void
 thread_context_set(Thread_Context *tctx) {
-  _ThreadContextLocal = tctx;
+  ThreadContextLocal = tctx;
 }
 
 internal Thread_Context *
 thread_context_get() {
-  return _ThreadContextLocal;
+  return ThreadContextLocal;
 }
 
 internal b32
@@ -40,7 +40,7 @@ internal void thread_context_set_name(String string) {
 
 internal String thread_context_get_name() {
   Thread_Context* tctx = thread_context_get();
-  String result = string_new(tctx->thread_name_size, tctx->thread_name);
+  String result = string(tctx->thread_name_size, tctx->thread_name);
   return result;
 }
 
