@@ -365,6 +365,7 @@ zchk(p) ? (zset((n)->prev), (n)->next = (f), (zchk(f) ? (0) : ((f)->prev = (n)))
 #define local_persist   static
 #define global          static
 #define internal        static
+#define fallthrough
 
 ////////////////////////////////
 // Types 
@@ -448,5 +449,29 @@ date_time_less_than(DateTime a, DateTime b) {
   else if (a.milliseconds > b.milliseconds) { result = 0; }
   return result;
 }
+
+typedef enum Axis2 {
+  Axis2_Invalid = -1,
+  Axis2_X,
+  Axis2_Y,
+  Axis2_COUNT
+} Axis2;
+
+typedef enum Axis3 {
+  Axis3_Invalid = -1,
+  Axis3_X,
+  Axis3_Y,
+  Axis3_Z,
+  Axis3_COUNT
+} Axis3;
+
+typedef enum Axis4 {
+  Axis4_Invalid = -1,
+  Axis4_X,
+  Axis4_Y,
+  Axis4_Z,
+  Axis4_W,
+  Axis4_COUNT
+} Axis4;
 
 #endif // F_CORE_H

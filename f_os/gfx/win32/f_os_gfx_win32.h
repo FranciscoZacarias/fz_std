@@ -53,9 +53,14 @@ typedef struct OS_Win32_GfxState {
 global OS_W32_GetDpiForWindowType* Win32GetDpiForWindow;
 global OS_Win32_GfxState* OSWin32GfxState;;
 
+//~ Helpers
+
+internal OS_Handle        os_win32_handle_from_window(OS_Win32_Window *window);
+internal OS_Win32_Window* os_win32_window_from_handle(OS_Handle handle);
+internal OS_Modifiers     os_win32_get_modifiers();
+
 //~ Window Proc
 
 internal LRESULT os_win32_window_proc(HWND hwnd, UINT message, WPARAM w_param, LPARAM l_param);
-
 
 #endif // OS_GFX_WIN32_H
