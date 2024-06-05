@@ -4,7 +4,10 @@
 typedef u32 Match_Flags;
 enum {
   MatchFlag_CaseInsensitive  = (1<<0),
-  MatchFlag_SlashInsensitive = (1<<1),
+  MatchFlag_RightSideSloppy  = (1<<1),
+  MatchFlag_SlashInsensitive = (1<<2),
+  MatchFlag_FindLast         = (1<<3),
+  MatchFlag_KeepEmpties      = (1<<4),
 };
 
 typedef struct DecodedCodepoint {
@@ -57,18 +60,27 @@ internal String string_to_upper(Arena *arena, String str);
 internal String string_to_lower(Arena *arena, String str);
 
 // Slices
-internal String string_pop_left(String str);
-internal String string_pop_right(String str);
+internal String string_substring(String str, RingBuffer1U64 rng);
+internal String string_skip(String str, u64 min);
+internal String string_chop(String str, u64 nmax);
 internal String string_prefix(String str, u64 size);
 internal String string_suffix(String str, u64 size);
 
 // Match
 internal b32 string_equals(String a, String b, Match_Flags flags);
+internal u64 string_find_substring(String str, String to_find, u64 start_pos, Match_Flags flags);
 internal b32 string_startswith(String str, String match, Match_Flags flags);
 internal b32 string_endswith(String str, String match, Match_Flags flags);
 
 internal String_List string_split(Arena* arena, String str, String split_character);
 internal void        string_list_push(Arena* arena, String_List* list, String str);
+
+// Path
+internal String string_path_chop_last_period(String str);
+internal String string_path_skip_last_period(String str);
+internal String string_path_chop_last_slash(String str);
+internal String string_path_skip_last_slash(String str);
+internal String string_path_chop_past_last_slash(String str);
 
 // Casting
 internal b32 cast_string_to_f32(String str, f32* value);

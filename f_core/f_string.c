@@ -68,15 +68,45 @@ string_range(u8* first, u8* range) {
   return result;
 }
 
+// Slices
+
 internal String
-string_pop_left(String str) {
-  String result = string(str.size-1, str.str+1);
+string_substring(String str, RingBuffer1U64 rng) {
+  u64 min = rng.min;
+  u64 max = rng.max;
+  if(max > str.size) {
+    max = str.size;
+  }
+  if(min > str.size) {
+    min = str.size;
+  }
+  if(min > max) {
+    u64 swap = min;
+    min = max;
+    max = swap;
+  }
+  str.size = max - min;
+  str.str += min;
+  return str;
+}
+
+internal String string_skip(String str, u64 min) {
+  String result = string_substring(str, ringbufer1u64(min, str.size));
   return result;
 }
 
-internal String
-string_pop_right(String str) {
-  String result = string(str.size-1, str.str);
+internal String string_chop(String str, u64 nmax) {
+  String result =  string_substring(str, ringbufer1u64(0, str.size-nmax));
+  return result;
+}
+
+internal String string_prefix(String str, u64 size) {
+  String result =  string_substring(str, ringbufer1u64(0, size));
+  return result;
+}
+
+internal String string_suffix(String str, u64 size) {
+  String result =  string_substring(str, ringbufer1u64(str.size-size, str.size));
   return result;
 }
 
@@ -110,6 +140,25 @@ string_equals(String a, String b, Match_Flags flags) {
   return result;
 }
 
+internal u64
+string_find_substring(String str, String to_find, u64 start_pos, Match_Flags flags) {
+  b32 found = 0;
+  u64 found_idx = str.size;
+  for(u64 i = start_pos; i < str.size; i += 1) {
+    if(i + to_find.size <= str.size) {
+      String substr = string_substring(str, ringbufer1u64(i, i+to_find.size));
+      if(string_equals(substr, to_find, flags)) {
+        found_idx = i;
+        found = 1;
+        if(!(flags & MatchFlag_FindLast)) {
+          break;
+        }
+      }
+    }
+  }
+  return found_idx;
+}
+
 internal b32
 string_startswith(String str, String match, Match_Flags flags) {
   String prefix = string_prefix(str, match.size);
@@ -122,20 +171,6 @@ string_endswith(String str, String match, Match_Flags flags) {
   String suffix = string_suffix(str, match.size);
   b32 result = string_equals(match, suffix, flags);
   return result;
-}
-
-internal String 
-string_prefix(String str, u64 size) {
-  str.size = ClampTop(size, str.size);
-  return str;
-}
-
-internal String 
-string_suffix(String str, u64 size) {
-  size = ClampTop(size, str.size);
-  str.str = (str.str + str.size) - size;
-  str.size = size;
-  return str;
 }
 
 internal String
@@ -194,6 +229,58 @@ string_list_push(Arena* arena, String_List* list, String str) {
   list->node_count += 1;
   list->total_size += node->value.size;
 }
+
+//~ Path
+
+internal String
+string_path_chop_last_period(String str) {
+  u64 period_pos = string_find_substring(str, StringLiteral("."), 0, MatchFlag_FindLast);
+  if(period_pos < str.size) {
+    str.size = period_pos;
+  }
+  return str;
+}
+
+internal String
+string_path_skip_last_period(String str) {
+  u64 period_pos = string_find_substring(str, StringLiteral("."), 0, MatchFlag_FindLast);
+  if(period_pos < str.size) {
+    str.str += period_pos+1;
+    str.size -= period_pos+1;
+  }
+  return str;
+}
+
+internal String
+string_path_chop_last_slash(String str) {
+  u64 slash_pos = string_find_substring(str, StringLiteral("/"), 0, MatchFlag_SlashInsensitive|MatchFlag_FindLast);
+  if(slash_pos < str.size) {
+    str.size = slash_pos;
+  }
+  return str;
+}
+
+internal String
+string_path_skip_last_slash(String str) {
+  u64 slash_pos = string_find_substring(str, StringLiteral("/"), 0, MatchFlag_SlashInsensitive|MatchFlag_FindLast);
+  if(slash_pos < str.size) {
+    str.str += slash_pos+1;
+    str.size -= slash_pos+1;
+  }
+  return str;
+}
+
+internal String
+string_path_chop_past_last_slash(String str) {
+  u64 slash_pos = string_find_substring(str, StringLiteral("/"), 0, MatchFlag_SlashInsensitive|MatchFlag_FindLast);
+  if(slash_pos < str.size) {
+    str.size = slash_pos+1;
+  }
+  return str;
+}
+
+
+//~ Casting
 
 internal b32
 cast_string_to_f32(String str, f32* value) {
