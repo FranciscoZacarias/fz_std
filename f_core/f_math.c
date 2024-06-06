@@ -837,38 +837,3 @@ internal f32 lerpf32(f32 start, f32 end, f32 t) {
 	f32 result = start + t * (end - start);
 	return result;
 }
-
-internal RingBuffer1U64 ringbufer1u64(u64 min, u64 max) {
-	RingBuffer1U64 result = { min, max };
-	if(result.max < result.min) {
-		Swap(u64, result.min, result.max);
-	}
-	return result;
-}
-internal RingBuffer1U64 pad1u64(RingBuffer1U64 r, u64 x) {
-	return ringbufer1u64(r.min-x, r.max+x);
-}
-
-internal u64 center1u64(RingBuffer1U64 r) {
-	return (r.min + r.max)/2;
-}
-
-internal b32 contains1u64(RingBuffer1U64 r, u64 v) {
-	return r.min <= v && v < r.max;
-}
-
-internal u64 dim1u64(RingBuffer1U64 r) {
-	return (r.max - r.min);
-}
-
-internal RingBuffer1U64 union1u64(RingBuffer1U64 a, RingBuffer1U64 b) {
-	return ringbufer1u64(Min(a.min, b.min), Max(a.max, b.max));
-}
-
-internal RingBuffer1U64 intersection1u64(RingBuffer1U64 a, RingBuffer1U64 b) {
-	return ringbufer1u64(Max(a.min, b.min), Min(a.max, b.max));
-}
-
-internal u64 clamp1u64(RingBuffer1U64 r, u64 v) {
-	v = Clamp(r.min, v, r.max); return v;
-}

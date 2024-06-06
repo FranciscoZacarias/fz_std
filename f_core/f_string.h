@@ -54,15 +54,16 @@ internal u8  char_to_forward_slash(u8 c);
 //~ String (utf-8) functions
 #define StringLiteral(s) (String){sizeof(s)-1, (u8*)(s)}
 internal String string(u64 size, u8* str);
+internal void   string_print(String str);
 internal String string_range(u8* first, u8* range);
 internal String string_copy(Arena* arena, String str);
 internal String string_to_upper(Arena *arena, String str);
 internal String string_to_lower(Arena *arena, String str);
 
 // Slices
-internal String string_substring(String str, RingBuffer1U64 rng);
+internal String string_substring(String str, u64 offset, u64 cap);
 internal String string_skip(String str, u64 min);
-internal String string_chop(String str, u64 nmax);
+internal String string_truncate(String str, u64 nmax);
 internal String string_prefix(String str, u64 size);
 internal String string_suffix(String str, u64 size);
 

@@ -62,6 +62,11 @@ string(u64 size, u8* str) {
   return result;
 }
 
+internal void
+string_print(String str) {
+  printf("%.*s", (s32)str.size, str.str);
+}
+
 internal String
 string_range(u8* first, u8* range) {
   String result = (String){(u64)(range - first), first};
@@ -71,42 +76,40 @@ string_range(u8* first, u8* range) {
 // Slices
 
 internal String
-string_substring(String str, RingBuffer1U64 rng) {
-  u64 min = rng.min;
-  u64 max = rng.max;
-  if(max > str.size) {
-    max = str.size;
+string_substring(String str, u64 offset, u64 cap) {
+  if(cap > str.size) {
+    cap = str.size;
   }
-  if(min > str.size) {
-    min = str.size;
+  if(offset > str.size) {
+    offset = str.size;
   }
-  if(min > max) {
-    u64 swap = min;
-    min = max;
-    max = swap;
+  if(offset > cap) {
+    u64 swap = offset;
+    offset = cap;
+    cap = swap;
   }
-  str.size = max - min;
-  str.str += min;
+  str.size = cap - offset;
+  str.str += offset;
   return str;
 }
 
 internal String string_skip(String str, u64 min) {
-  String result = string_substring(str, ringbufer1u64(min, str.size));
+  String result = string_substring(str, min, str.size);
   return result;
 }
 
-internal String string_chop(String str, u64 nmax) {
-  String result =  string_substring(str, ringbufer1u64(0, str.size-nmax));
+internal String string_truncate(String str, u64 nmax) {
+  String result =  string_substring(str, 0, str.size-nmax);
   return result;
 }
 
 internal String string_prefix(String str, u64 size) {
-  String result =  string_substring(str, ringbufer1u64(0, size));
+  String result =  string_substring(str, 0, size);
   return result;
 }
 
 internal String string_suffix(String str, u64 size) {
-  String result =  string_substring(str, ringbufer1u64(str.size-size, str.size));
+  String result =  string_substring(str, str.size-size, str.size);
   return result;
 }
 
@@ -146,7 +149,7 @@ string_find_substring(String str, String to_find, u64 start_pos, Match_Flags fla
   u64 found_idx = str.size;
   for(u64 i = start_pos; i < str.size; i += 1) {
     if(i + to_find.size <= str.size) {
-      String substr = string_substring(str, ringbufer1u64(i, i+to_find.size));
+      String substr = string_substring(str, i, i+to_find.size);
       if(string_equals(substr, to_find, flags)) {
         found_idx = i;
         found = 1;

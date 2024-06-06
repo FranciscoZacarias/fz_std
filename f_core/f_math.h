@@ -51,14 +51,6 @@ typedef struct Mat4f32 {
   };
 } Mat4f32;
 
-typedef union RingBuffer1U64 {
-  struct {
-    u64 min;
-    u64 max;
-  };
-  u64 v[2];
-} RingBuffer1U64;
-
 internal Vec2f32 vec2f32(f32 x, f32 y);
 internal f32 distance_vec2f32(Vec2f32 a, Vec2f32 b);
 internal f32 signed_distance_vec2f32(Vec2f32 a, Vec2f32 b, Vec2f32 reference);
@@ -125,14 +117,5 @@ internal Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
 
 internal f32 clampf32(f32 value, f32 min, f32 max);
 internal f32 lerpf32(f32 start, f32 end, f32 t);
-
-internal RingBuffer1U64 ringbufer1u64(u64 min, u64 max);
-internal RingBuffer1U64 pad1u64(RingBuffer1U64 r, u64 x);
-internal u64            center1u64(RingBuffer1U64 r);
-internal b32            contains1u64(RingBuffer1U64 r, u64 v);
-internal u64            dim1u64(RingBuffer1U64 r);
-internal RingBuffer1U64 union1u64(RingBuffer1U64 a, RingBuffer1U64 b);
-internal RingBuffer1U64 intersection1u64(RingBuffer1U64 a, RingBuffer1U64 b);
-internal u64            clamp1u64(RingBuffer1U64 r, u64 v);
 
 #endif // F_MATH_H

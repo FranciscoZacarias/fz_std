@@ -172,15 +172,21 @@ os_file_close(OS_Handle file) {
 }
 
 internal String
-os_file_read(Arena *arena, OS_Handle file, RingBuffer1U64 range) {
+os_file_read(Arena* arena, OS_Handle file) {
+  OS_File_Attributes file_attributes = os_attributes_from_file(file);
+  os_file_read_sized(arena, file, 0, file_attributes.size);
+}
+
+internal String
+os_file_read_sized(Arena *arena, OS_Handle file, u64 offset, u64 cap) {
   String result = {0};
   HANDLE handle = (HANDLE)file.u64[0];
   LARGE_INTEGER off_li = {0};
-  off_li.QuadPart = range.min;
+  off_li.QuadPart = offset;
   if(handle == INVALID_HANDLE_VALUE) {
     // TODO(fz): accumulate errors
   } else if(SetFilePointerEx(handle, off_li, 0, FILE_BEGIN)) {
-    u64 bytes_to_read = dim1u64(range);
+    u64 bytes_to_read = AbsoluteValueU64(cap - offset); // dim1u64(range);
     u64 bytes_actually_read = 0;
     result.str = PushArrayNoZero(arena, u8, bytes_to_read);
     result.size = 0;

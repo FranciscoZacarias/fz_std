@@ -70,7 +70,8 @@ internal u64   os_memory_get_page_size();
 //~ File handling
 internal OS_Handle os_file_open(OS_Access_Flags access_flags, String path);
 internal void      os_file_close(OS_Handle file);
-internal String    os_file_read(Arena *arena, OS_Handle file, RingBuffer1U64 range);
+internal String    os_file_read(Arena *arena, OS_Handle file);
+internal String    os_file_read_sized(Arena *arena, OS_Handle file, u64 offset, u64 cap);
 internal void      os_file_write(OS_Handle file, u64 off, String_List data);
 internal b32       os_file_is_valid(OS_Handle file);
 internal OS_File_Attributes os_attributes_from_file(OS_Handle file);
