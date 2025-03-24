@@ -7,10 +7,13 @@
 /* 
   Macro quick look-up:
 
+  ENABLE_ASSERT
+
   COMPILER_CLANG
   COMPILER_MSVC
   COMPILER_GCC
 
+  NOTE(fz): f_base only supports windows. It was not built to be abstracted.
   OS_WINDOWS
   OS_LINUX
   OS_MAC
@@ -137,12 +140,7 @@
 # error Endianness of this architecture not understood by context cracker.
 #endif
 
-//~ Zero All Undefined Options
-// Build options
-#if !defined(IS_COMMAND_LINE_PROGRAM)
-#define IS_COMMAND_LINE_PROGRAM 0
-#endif
-// Architecture
+// Zero All Undefined Options
 #if !defined(ARCH_32BIT)
 # define ARCH_32BIT 0
 #endif
@@ -161,7 +159,6 @@
 #if !defined(ARCH_ARM32)
 # define ARCH_ARM32 0
 #endif
-// Compiler
 #if !defined(COMPILER_MSVC)
 # define COMPILER_MSVC 0
 #endif
@@ -171,7 +168,6 @@
 #if !defined(COMPILER_CLANG)
 # define COMPILER_CLANG 0
 #endif
-// Operating system
 #if !defined(OS_WINDOWS)
 # define OS_WINDOWS 0
 #endif
@@ -181,17 +177,11 @@
 #if !defined(OS_MAC)
 # define OS_MAC 0
 #endif
-#if !defined(ASAN_ENABLED)
-# define ASAN_ENABLED 0
-#endif
 
-#if ASAN_ENABLED && COMPILER_MSVC
-# define no_asan __declspec(no_sanitize_address)
-#elif ASAN_ENABLED && (COMPILER_CLANG || COMPILER_GCC)
-# define no_asan __attribute__((no_sanitize("address")))
-#endif
-#if !defined(no_asan)
-# define no_asan
+#if ARCH_X64 || ARCH_ARM64
+# define ARCH_ADDRSIZE 64
+#else
+# define ARCH_ADDRSIZE 32
 #endif
 
 #if COMPILER_MSVC
@@ -201,32 +191,10 @@
 #endif
 
 #if OS_WINDOWS
-# define shared_function C_LINKAGE __declspec(dllexport)
+# define shared_internal C_LINKAGE __declspec(dllexport)
 #else
-# define shared_function C_LINKAGE
+# define shared_internal C_LINKAGE
 #endif
-
-#if OS_WINDOWS
-# pragma section(".roglob", read)
-# define read_only no_asan __declspec(allocate(".roglob"))
-#else
-# define read_only
-#endif
-
-#if COMPILER_MSVC
-# define per_thread __declspec(thread)
-#elif COMPILER_CLANG
-# define per_thread __thread
-#elif COMPILER_GCC
-# define per_thread __thread
-#endif
-
-#if COMPILER_MSVC && COMPILER_MSVC_YEAR < 2015
-# define inline_internal static
-#else
-# define inline_internal inline static
-#endif
-
 
 #if LANG_CPP
 # define C_LINKAGE_BEGIN extern "C"{
@@ -271,7 +239,7 @@
 # define AssertNoReentry()
 #endif
 
-#define StaticAssert(c,l) typedef u8 Glue(l,__LINE__) [(c)?1:-1]
+#define StaticAssert(condition,label) typedef u8 Glue(label,__LINE__) [(condition)?1:-1]
 
 #define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
 
@@ -286,10 +254,10 @@
 #define Member(T,m) (((T*)0)->m)
 #define OffsetOfMember(T,m) IntFromPtr(&Member(T,m))
 
-#define Kilobytes(n) ((u64)(n * 1024llu))
-#define Megabytes(n) ((u64)(n * 1024llu * 1024llu))
-#define Gigabytes(n) ((u64)(n * 1024llu * 1024llu * 1024llu))
-#define Terabytes(n) ((u64)(n * 1024llu * 1024llu * 1024llu * 1024llu))
+#define Kilobytes(n) ((u64)(n * 1024))
+#define Megabytes(n) ((u64)(n * 1024 * 1024))
+#define Gigabytes(n) ((u64)(n * 1024 * 1024 * 1024))
+#define Terabytes(n) ((u64)(n * 1024 * 1024 * 1024 * 1024))
 
 #define Thousand(n) ((n)*1000)
 #define Million(n)  ((n)*1000000llu)
@@ -302,70 +270,22 @@
 #define IsPow2(x)          ((x)!=0 && ((x)&((x)-1))==0)
 #define IsPow2OrZero(x)    ((((x) - 1)&(x)) == 0)
 
-#define Swap(type, a, b) do{ type _swapper_ = a; a = b; b = _swapper_; }while(0)
 
-#define AbsoluteValueS32(x) (s32)abs((x))
-#define AbsoluteValueS64(x) (s64)llabs((s64)(x))
-#define AbsoluteValueU32(x) (u32)abs((x))
-#define AbsoluteValueU64(x) (u64)llabs((u64)(x))
+#define MemoryCopy(dst, src, size) memcpy((dst), (src), (size))
+#define MemoryMove(dst, src, size) memmove((dst), (src), (size))
+#define MemorySet(dst, val, size)  memset((dst), (val), (size))
+#define MemoryMatch(a,b,size)     (memcmp((a),(b),(size)) == 0)
 
-//~ Linked list helpers
+#define MemoryCopyStruct(dst, src) do { Assert(sizeof(*(dst)) == sizeof(*(src))); MemoryCopy((dst), (src), sizeof(*(dst))); } while(0)
+#define MemoryCopyArray(dst, src)  do { Assert(sizeof(dst) == sizeof(src)); MemoryCopy((dst), (src), sizeof(src)); }while(0)
 
-#define CheckNull(p) ((p)==0)
-#define SetNull(p) ((p)=0)
+#define MemoryZero(ptr, size) MemorySet((ptr), 0, (size))
+#define MemoryZeroStruct(ptr) MemoryZero((ptr), sizeof(*(ptr)))
+#define MemoryZeroArray(arr)  MemoryZero((arr), sizeof(arr))
 
-#define QueuePush_NZ(f,l,n,next,zchk,zset) (zchk(f)?\
-(((f)=(l)=(n)), zset((n)->next)):\
-((l)->next=(n),(l)=(n),zset((n)->next)))
-#define QueuePushFront_NZ(f,l,n,next,zchk,zset) (zchk(f) ? (((f) = (l) = (n)), zset((n)->next)) :\
-((n)->next = (f)), ((f) = (n)))
-#define QueuePop_NZ(f,l,next,zset) ((f)==(l)?\
-(zset(f),zset(l)):\
-((f)=(f)->next))
-#define StackPush_N(f,n,next) ((n)->next=(f),(f)=(n))
-#define StackPop_NZ(f,next,zchk) (zchk(f)?0:((f)=(f)->next))
-
-#define DLLInsert_NPZ(f,l,p,n,next,prev,zchk,zset) \
-(zchk(f) ? (((f) = (l) = (n)), zset((n)->next), zset((n)->prev)) :\
-zchk(p) ? (zset((n)->prev), (n)->next = (f), (zchk(f) ? (0) : ((f)->prev = (n))), (f) = (n)) :\
-((zchk((p)->next) ? (0) : (((p)->next->prev) = (n))), (n)->next = (p)->next, (n)->prev = (p), (p)->next = (n),\
-((p) == (l) ? (l) = (n) : (0))))
-#define DLLPushBack_NPZ(f,l,n,next,prev,zchk,zset) DLLInsert_NPZ(f,l,l,n,next,prev,zchk,zset)
-#define DLLRemove_NPZ(f,l,n,next,prev,zchk,zset) (((f)==(n))?\
-((f)=(f)->next, (zchk(f) ? (zset(l)) : zset((f)->prev))):\
-((l)==(n))?\
-((l)=(l)->prev, (zchk(l) ? (zset(f)) : zset((l)->next))):\
-((zchk((n)->next) ? (0) : ((n)->next->prev=(n)->prev)),\
-(zchk((n)->prev) ? (0) : ((n)->prev->next=(n)->next))))
-
-#define QueuePush(f,l,n)         QueuePush_NZ(f,l,n,next,CheckNull,SetNull)
-#define QueuePushFront(f,l,n)    QueuePushFront_NZ(f,l,n,next,CheckNull,SetNull)
-#define QueuePop(f,l)            QueuePop_NZ(f,l,next,SetNull)
-#define StackPush(f,n)           StackPush_N(f,n,next)
-#define StackPop(f)              StackPop_NZ(f,next,CheckNull)
-#define DLLPushBack(f,l,n)       DLLPushBack_NPZ(f,l,n,next,prev,CheckNull,SetNull)
-#define DLLPushFront(f,l,n)      DLLPushBack_NPZ(l,f,n,prev,next,CheckNull,SetNull)
-#define DLLInsert(f,l,p,n)       DLLInsert_NPZ(f,l,p,n,next,prev,CheckNull,SetNull)
-#define DLLRemove(f,l,n)         DLLRemove_NPZ(f,l,n,next,prev,CheckNull,SetNull)
-
-//~ Defer
-
-#define DeferLoop(start, end) for(int _i_ = ((start), 0); _i_ == 0; _i_ += 1, (end))
-#define DeferLoopChecked(begin, end) for(int _i_ = 2 * !(begin); (_i_ == 2 ? ((end), 0) : !_i_); _i_ += 1, (end))
-
-//~ Memory
-
-#define MemoryCopy(dest,value,size)  memmove((dest),(value),(size))
-#define MemoryCopyStruct(dest,value) MemoryCopy((dest),(value), Min(sizeof(*(dest)), sizeof(*(size))))
-#define MemoryZero(s,z)            memset((s),0,(z))
-#define MemoryZeroStruct(s)        MemoryZero((s),sizeof(*(s)))
-#define MemorySet(dest,value,size) memset((dest),(value),(size))
-#define MemoryMatch(a,b,z)        (memcmp((a),(b),(z)) == 0)
-
-#define local_persist   static
-#define global          static
-#define internal        static
-#define fallthrough
+#define local_persist static
+#define global        static
+#define internal       static
 
 ////////////////////////////////
 // Types 
@@ -405,73 +325,5 @@ typedef double f64;
 
 typedef s8  b8;
 typedef s32 b32;
-
-typedef struct DateTime {
-  u16 year;
-  u8 month;         // [1,  12]
-  u8 day_of_week;   // [0,   6]
-  u8 day;           // [1,  31]
-  u8 hour;          // [0,  23]
-  u8 minute;        // [0,  59]
-  u8 second;        // [0,  59]
-  u16 milliseconds; // [0, 999]
-} DateTime;
-
-inline_internal b32
-date_time_match(DateTime a, DateTime b) {
-  return (a.year == b.year &&
-          a.month == b.month &&
-          a.day_of_week == b.day_of_week &&
-          a.day == b.day &&
-          a.hour == b.hour &&
-          a.minute == b.minute &&
-          a.second == b.second &&
-          a.milliseconds == b.milliseconds);
-}
-
-inline_internal b32
-date_time_less_than(DateTime a, DateTime b) {
-  b32 result = 0;
-  if (0){}
-  else if (a.year < b.year) { result = 1; }
-  else if (a.year > b.year) { result = 0; }
-  else if (a.month < b.month) { result = 1; }
-  else if (a.month > b.month) { result = 0; }
-  else if (a.day < b.day) { result = 1; }
-  else if (a.day > b.day) { result = 0; }
-  else if (a.hour < b.hour) { result = 1; }
-  else if (a.hour > b.hour) { result = 0; }
-  else if (a.minute < b.minute) { result = 1; }
-  else if (a.minute > b.minute) { result = 0; }
-  else if (a.second < b.second) { result = 1; }
-  else if (a.second > b.second) { result = 0; }
-  else if (a.milliseconds < b.milliseconds) { result = 1; }
-  else if (a.milliseconds > b.milliseconds) { result = 0; }
-  return result;
-}
-
-typedef enum Axis2 {
-  Axis2_Invalid = -1,
-  Axis2_X,
-  Axis2_Y,
-  Axis2_COUNT
-} Axis2;
-
-typedef enum Axis3 {
-  Axis3_Invalid = -1,
-  Axis3_X,
-  Axis3_Y,
-  Axis3_Z,
-  Axis3_COUNT
-} Axis3;
-
-typedef enum Axis4 {
-  Axis4_Invalid = -1,
-  Axis4_X,
-  Axis4_Y,
-  Axis4_Z,
-  Axis4_W,
-  Axis4_COUNT
-} Axis4;
 
 #endif // F_CORE_H

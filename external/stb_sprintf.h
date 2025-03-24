@@ -49,7 +49,7 @@ the same format strings in cross platform code.
 
 It uses the standard single file trick of being both the header file
 and the source itself. If you just include it normally, you just get
-the header file function definitions. To get the code, you include
+the header file internal definitions. To get the code, you include
 it from a C or C++ file and define STB_SPRINTF_IMPLEMENTATION first.
 
 It only uses va_args macros from the C runtime to do it's work. It
@@ -76,7 +76,7 @@ int stbsp_vsprintfcb( STBSP_SPRINTFCB * callback, void * user, char * buf, char 
     typedef char * STBSP_SPRINTFCB( char const * buf, void * user, int len );
   Convert into a buffer, calling back every STB_SPRINTF_MIN chars.
   Your callback can then copy the chars out, print them or whatever.
-  This function is actually the workhorse for everything else.
+  This internal is actually the workhorse for everything else.
   The buffer you pass in must hold at least STB_SPRINTF_MIN characters.
     // you return the next buffer to use or 0 to stop converting
 
