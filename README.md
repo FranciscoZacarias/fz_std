@@ -10,13 +10,13 @@ Basic structure:
 void application_init() {
 }
 
-// Run every tick. Return false to exit.
+// Run every tick.
 void application_tick() {
 }
 
 ```
 
-See `example.c` for examples on how to:
+See `example.c` for examples on how to use. Includes:
   - Create and launch window (bare metal win32)
   - Launch terminal application (not mutually exclusive with windows)
   - Attach OpenGL context
