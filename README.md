@@ -3,7 +3,7 @@
 
 Basic structure:
 
-````c
+```c
 #include "fz_include.h"
 
 // Run once at start of program
