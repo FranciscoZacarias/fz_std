@@ -1,3 +1,4 @@
+#if FZ_ENABLE_WINDOW
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
   switch (message) {
     case WM_SETCURSOR:
@@ -69,63 +70,90 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
   }
   return DefWindowProc(hWnd, message, wParam, lParam);
 }
+#endif // FZ_ENABLE_WINDOW
 
 // NOTE(fz): App entry point
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    
-#if FZ_ENABLE_WINDOW
-  _WindowHandle = win32_window_create(hInstance, WINDOW_WIDTH, WINDOW_HEIGHT);
-  if (!_WindowHandle) {
-    return 1;
-  }
-#endif 
 
-#if FZ_ENABLE_OPENGL
-  if (!attach_opengl_context()) {
-    return 1;
-  }
+  // Ensure at least one of FZ_ENABLE_WINDOW or FZ_ENABLE_CONSOLE is defined
+#if !FZ_ENABLE_WINDOW && !FZ_ENABLE_CONSOLE
+  #error "At least one of FZ_ENABLE_WINDOW or FZ_ENABLE_CONSOLE must be defined."
 #endif
 
-  // TODO(fz): Should be togglable
-#if FZ_ENABLE_CONSOLE
-  attach_console_output();
+#if FZ_ENABLE_OPENGL && !FZ_ENABLE_WINDOW
+  #error "Please define FZ_ENABLE_WINDOW if you're using FZ_ENABLE_OPENGL"
 #endif
-
-  RECT rect;
-  GetClientRect(_WindowHandle, &rect);
-  win32_window_resize_callback(rect.right - rect.left, rect.bottom - rect.top);
 
   // Initialize timers
   win32_timer_init();
   win32_timer_start(&_Timer_ElapsedTime);
   win32_timer_start(&_Timer_DeltaTime);
   win32_timer_start(&_Timer_FrameTime);
-  
+
+  // Initialize thread context
+  thread_context_init_and_attach(&MainThreadContext);
+
+  // NOTE(fz): Common initialization for both window and console
+#if FZ_ENABLE_CONSOLE
+  // Attach console output if console is enabled
+  attach_console_output();
+#endif
+
+#if FZ_ENABLE_WINDOW
   _input_init();
+
+  // If window is enabled, create the window
+  _WindowHandle = win32_window_create(hInstance, FZ_WINDOW_WIDTH, FZ_WINDOW_HEIGHT);
+  if (!_WindowHandle) {
+    ERROR_MESSAGE_AND_EXIT("Failed to get window handle\n");
+    return 1;
+  }
+
+  // If opengl is enabled, this get overridden.
+  _DeviceContextHandle = GetDC(_WindowHandle);
+  if (!_DeviceContextHandle) {
+      ERROR_MESSAGE_AND_EXIT("Failed to get device context\n");
+      return 1;
+  }
+#endif
+
+#if FZ_ENABLE_OPENGL
+  // Attach OpenGL context if OpenGL is enabled
+  if (!attach_opengl_context())  return 1;
+#endif
+
+  // Initialize application-specific logic
   application_init();
 
-  MSG msg;
-  while (true) {
-    // Measure true frame time
-    win32_timer_start(&_Timer_FrameTime);
+  // NOTE(fz): Main loop - common for both console and windowed applications
+  MSG msg = {0};
+  while (IsApplicationRunning) {
+#if FZ_ENABLE_WINDOW
+  _input_update();
 
-    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-      if (msg.message == WM_QUIT) break;
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    }
+  // Measure true frame time
+  win32_timer_start(&_Timer_FrameTime);
+  if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (msg.message == WM_QUIT)  IsApplicationRunning = false;
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+#endif
 
-    // Measure gameplay delta time
-    win32_timer_start(&_Timer_DeltaTime);
-    application_tick();
+  // Measure application delta time
+  win32_timer_start(&_Timer_DeltaTime);
+  application_tick();
+  win32_timer_end(&_Timer_DeltaTime);
 
-    win32_timer_end(&_Timer_DeltaTime);
-    win32_timer_end(&_Timer_FrameTime);
+#if FZ_ENABLE_WINDOW
+  win32_timer_end(&_Timer_FrameTime);
+#endif
   }
 
   return (s32)msg.wParam;
 }
 
+#if FZ_ENABLE_WINDOW
 internal void win32_window_resize_callback(s32 width, s32 height) {
   if (height == 0) { 
     height = 1;
@@ -134,6 +162,7 @@ internal void win32_window_resize_callback(s32 width, s32 height) {
     glViewport(0, 0, width, height);
   }
 }
+#endif // FZ_ENABLE_WINDOW
 
 internal void win32_timer_init() {
   AssertNoReentry();
@@ -150,7 +179,7 @@ internal void win32_timer_end(PerformanceTimer* timer) {
   timer->elapsed_seconds = (f32)difference / (f32)_PerformanceFrequency.QuadPart;
 }
 
-
+#if FZ_ENABLE_WINDOW
 internal HWND win32_window_create(HINSTANCE hInstance, s32 width, s32 height) {
   HWND result = {0};
 
@@ -175,7 +204,9 @@ internal HWND win32_window_create(HINSTANCE hInstance, s32 width, s32 height) {
     
   return result;
 }
+#endif // FZ_ENABLE_WINDOW
 
+#if FZ_ENABLE_WINDOW
 internal void win32_set_cursor(CursorType cursor) {
   HCURSOR hCursor = NULL;
 
@@ -214,11 +245,15 @@ internal void win32_set_cursor(CursorType cursor) {
     SetCursor(hCursor);
   }
 }
+#endif 
 
+#if FZ_ENABLE_WINDOW
 internal void win32_set_cursor_position(s32 x, s32 y) {
   SetCursorPos(x, y);
 }
+#endif // FZ_ENABLE_WINDOW
 
+#if FZ_ENABLE_WINDOW
 internal void win32_lock_cursor(b32 lock) {
   if (lock) {
     RECT rect;
@@ -240,14 +275,26 @@ internal void win32_lock_cursor(b32 lock) {
     IsCursorLocked = false;
   }
 }
+#endif // FZ_ENABLE_WINDOW
 
+#if FZ_ENABLE_WINDOW
 internal void win32_hide_cursor(b32 hide) {
   // Win32 quirk. It has an internal counter required to show the cursor.
   // The while loops just make sure it exhausts the counter and applies immediately.
   while (ShowCursor(hide ? FALSE : TRUE) >= 0 &&  hide);
   while (ShowCursor(hide ? FALSE : TRUE) < 0  && !hide);
 }
+#endif  // FZ_ENABLE_WINDOW
 
+#if FZ_ENABLE_WINDOW && !FZ_ENABLE_OPENGL
+internal void win32_put_pixel(s32 x, s32 y, COLORREF color) {
+  if (_DeviceContextHandle) {
+    SetPixel(_DeviceContextHandle, x, y, color);
+  }
+}
+#endif // FZ_ENABLE_WINDOW && !FZ_ENABLE_OPENGL
+
+#if FZ_ENABLE_OPENGL
 internal b32 attach_opengl_context() {
   b32 result = true;
   _DeviceContextHandle = GetDC(_WindowHandle);
@@ -323,7 +370,9 @@ internal b32 attach_opengl_context() {
   _IsOpenGLContextAttached = true;
   return result;
 }
+#endif // FZ_ENABLE_OPENGL
 
+#if FZ_ENABLE_CONSOLE
 internal void attach_console_output() {
   AllocConsole();
   FILE* fp;
@@ -331,6 +380,7 @@ internal void attach_console_output() {
   freopen_s(&fp, "CONOUT$", "w", stderr);
   _IsTerminalAttached = true;
 }
+#endif // FZ_ENABLE_CONSOLE
 
 internal f32 _get_elapsed_time(void) {
   LARGE_INTEGER current;

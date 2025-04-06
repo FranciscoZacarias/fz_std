@@ -135,7 +135,7 @@ internal File_Data file_load(Arena* arena, String file_path) {
   return file;
 }
 
-internal void print_string(String string) {
+internal void println_string(String string) {
   HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
   WriteFile(handle, string.str, string.size, NULL, NULL);
   char newline = '\n';

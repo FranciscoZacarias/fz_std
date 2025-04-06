@@ -46,7 +46,7 @@ internal u64       file_get_last_modified_time(String file_path);
 
 ///////////////////////
 //~ Logging 
-internal void print_string(String string); // TODO(fz): This should be abstracted into a more generic win32_print that then String can use to implement it's own print_string
+internal void println_string(String string); // TODO(fz): This should be abstracted into a more generic win32_print that then String can use to implement it's own print_string
 
 ///////////////////////
 //~ Error

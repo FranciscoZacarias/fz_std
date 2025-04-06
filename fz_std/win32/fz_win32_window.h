@@ -3,8 +3,11 @@
 
 ///////////////////////
 //~ Application space
-extern void application_init();
-extern void application_tick();
+
+global b32 IsApplicationRunning = true;
+
+extern void application_init(); // Implement in application layer
+extern void application_tick(); // Implement in application layer
 
 ///////////////////////
 //~ Timer
@@ -32,6 +35,13 @@ void win32_timer_end(PerformanceTimer* timer);
 ///////////////////////
 //~ Window
 
+#if FZ_ENABLE_WINDOW
+
+# if !FZ_WINDOW_WIDTH || !FZ_WINDOW_HEIGHT
+#  define FZ_WINDOW_WIDTH  1280
+#  define FZ_WINDOW_HEIGHT 720
+# endif
+
 global HDC   _DeviceContextHandle    = NULL;
 global HGLRC _RenderingContextHandle = NULL;
 global HWND  _WindowHandle           = NULL;
@@ -40,11 +50,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 internal HWND win32_window_create(HINSTANCE hInstance, s32 width, s32 height);
 internal void win32_window_resize_callback(s32 width, s32 height);
-internal void win32_window_keyboard_callback(WPARAM wParam);
-internal void win32_window_mouse_buttons_callback(WPARAM wParam, s32 x, s32 y);
+
+# if FZ_ENABLE_WINDOW && !FZ_ENABLE_OPENGL
+internal void win32_put_pixel(s32 x, s32 y, COLORREF color);
+# endif // FZ_ENABLE_WINDOW && !FZ_ENABLE_OPENGL
+
+#endif // FZ_ENABLE_WINDOW
 
 ///////////////////////
 //~ Cursor
+
+#if FZ_ENABLE_WINDOW
 
 typedef enum Cursor_Type {
   CURSOR_ARROW,
@@ -64,12 +80,20 @@ internal void win32_set_cursor_position(s32 x, s32 y);
 internal void win32_lock_cursor(b32 lock);
 internal void win32_hide_cursor(b32 hide);
 
+#endif // FZ_ENABLE_WINDOW
+
 ///////////////////////
 //~ Window Components
 
 global b32 _IsOpenGLContextAttached = false;
 global b32 _IsTerminalAttached      = false;
+
+# if FZ_ENABLE_OPENGL
 internal b32  attach_opengl_context();
+# endif
+
+# if FZ_ENABLE_CONSOLE
 internal void attach_console_output();
+# endif
 
 #endif // FZ_WIN32_PLATFORM_H

@@ -55,6 +55,7 @@ typedef struct Mat4f32 {
   };
 } Mat4f32;
 #define mat4f32(diag) (Mat4f32) {diag,0.0f,0.0f,0.0f,0.0f,diag,0.0f,0.0f,0.0f,0.0f,diag,0.0f,0.0f,0.0f,0.0f,diag}
+#define mat4f32_identity() mat4f32(1.0f)
 
 typedef struct Quatf32 {
   union {

@@ -52,6 +52,9 @@ internal String_List string_split(Arena* arena, String str, String split_charact
   return result;
 }
 
+internal String string_list_pop(String_List* list)   { printf("%s not implemented", __func__);  return StringLiteral(""); };  // TODO(fz): Implement 
+internal void   string_list_clear(String_List* list) { printf("%s not implemented", __func__); };  // TODO(fz): Implement 
+
 internal void string_list_push(Arena* arena, String_List* list, String str) {
   String_Node* node = ArenaPush(arena, String_Node, sizeof(String_Node));
   

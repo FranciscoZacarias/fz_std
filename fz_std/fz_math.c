@@ -812,7 +812,7 @@ internal Mat4f32 mat4f32_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
 }
 
 internal Mat4f32 mat4f32_from_quatf32(Quatf32 q) {
-  Mat4f32 result = mat4f32(1.0f);
+  Mat4f32 result = mat4f32_identity();
 
   f32 a2 = q.x*q.x;
   f32 b2 = q.y*q.y;
