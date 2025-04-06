@@ -3,7 +3,7 @@ internal OGL_Shader ogl_make_shader(String source_path, GLenum kind) {
   OGL_Shader result  = glCreateShader(kind);
   GLenum error       = glGetError();
   if (error != GL_NO_ERROR) {
-    printf("Error %u in glCreateShader.\n", error);
+    ERROR_MESSAGE_AND_EXIT("Error %u in glCreateShader.\n", error);
   }
     
   File_Data shader_source = file_load(scratch.arena, source_path);
@@ -17,7 +17,7 @@ internal OGL_Shader ogl_make_shader(String source_path, GLenum kind) {
     glGetShaderInfoLog(result, 1024, NULL, infoLog);
     printf("Error %d while compiling shader. Log: %s", success, infoLog);
     glDeleteShader(result);
-    error_message_and_exit("Error creating shader");
+    ERROR_MESSAGE_AND_EXIT("Error creating shader");
   }
 
   scratch_end(&scratch);
@@ -41,8 +41,16 @@ internal OGL_Shader ogl_make_program(GLuint *shaders, u32 count) {
     for (u32 i = 0; i < count; i += 1){
       glDeleteShader(shaders[i]);
     }
-    error_message_and_exit("Error creating shader program");
+    ERROR_MESSAGE_AND_EXIT("Error creating shader program");
   }
   
   return result;
+}
+
+internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat) {
+  s32 uniform_location = glGetUniformLocation(program, uniform);
+  if (uniform_location == -1) {
+    printf("Mat4f32 :: Uniform %s not found\n", uniform);
+  }
+  glUniformMatrix4fv(uniform_location, 1, 1, &mat.data[0][0]);
 }

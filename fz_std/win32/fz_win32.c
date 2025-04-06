@@ -1,4 +1,5 @@
-internal void win32_init() {
+internal void application_stop() {
+  PostQuitMessage(0);
 }
 
 internal void* memory_reserve(u64 size) {
@@ -16,7 +17,7 @@ internal void  memory_decommit(void* memory, u64 size) {
 }
 
 internal void  memory_release(void* memory, u64 size) {
-  VirtualFree(memory, 0, MEM_RELEASE);
+  VirtualFree(memory, size, MEM_RELEASE);
 }
 
 internal u64 memory_get_page_size() {
@@ -120,7 +121,7 @@ internal File_Data file_load(Arena* arena, String file_path) {
     return file;
   }
   
-  u64 size  = file_size(file_path);
+  u32 size  = file_size(file_path);
   file.size = size;
   file.data = ArenaPush(arena, char, size);
   MemoryZero(file.data, file.size);
@@ -141,14 +142,17 @@ internal void print_string(String string) {
   WriteFile(handle, &newline, 1, NULL, NULL);
 }
 
-internal void error_message_and_exit(const char *fmt, ...) {
-    char buffer[1024];
-    va_list args;
+internal void _error_message_and_exit(const char *file, int line, const char *func, const char *fmt, ...) {
+  char buffer[1024];
+  va_list args;
 
-    va_start(args, fmt);
-    vsnprintf(buffer, sizeof(buffer), fmt, args);
-    va_end(args);
+  va_start(args, fmt);
+  vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
 
-    MessageBoxA(0, buffer, "Error", MB_OK);
-    ExitProcess(1);
+  char detailed_buffer[2048];
+  snprintf(detailed_buffer, sizeof(detailed_buffer), "Error at %s:%d in %s\n%s", file, line, func, buffer);
+
+  MessageBoxA(0, detailed_buffer, "ahah idiot", MB_OK);
+  ExitProcess(1);
 }

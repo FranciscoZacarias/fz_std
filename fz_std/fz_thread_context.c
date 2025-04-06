@@ -1,4 +1,3 @@
-
 internal void thread_context_init_and_attach(Thread_Context* thread_context) {
   MemoryZeroStruct(thread_context);
   Arena **arena_ptr = thread_context->arenas;

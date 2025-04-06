@@ -1,5 +1,5 @@
-#ifndef F_CORE_H
-#define F_CORE_H
+#ifndef FZ_CORE_H
+#define FZ_CORE_H
 
 ////////////////////////////////
 // Context Cracking
@@ -7,7 +7,7 @@
 /* 
   Macro quick look-up:
 
-  ENABLE_ASSERT
+  FZ_ENABLE_ASSERT
 
   COMPILER_CLANG
   COMPILER_MSVC
@@ -227,15 +227,20 @@
 
 #define Statement(S) do{ S }while(0)
 
+
 #if !defined(AssertBreak)
-# define AssertBreak() (*(volatile int*)0 = 0)
+# if defined(OS_WINDOWS)
+#  define AssertBreak(condition) Statement(if (!(condition)) { ERROR_MESSAGE_AND_EXIT("Assert Failed\nExpression: %s", Stringify(condition)); })
+# else
+#  define AssertBreak(condition) (*(volatile int*)0 = 0)
+# endif
 #endif
 
-#if ENABLE_ASSERT
-# define Assert(c) Statement( if (!(c)){ AssertBreak(); } )
+#if FZ_ENABLE_ASSERT
+# define Assert(condition) Statement( if (!(condition)){ AssertBreak(condition); } )
 # define AssertNoReentry() Statement(local_persist b32 triggered = 0;Assert(triggered == 0); triggered = 1;) 
 #else
-# define Assert(c)
+# define Assert(condition)
 # define AssertNoReentry()
 #endif
 
@@ -247,7 +252,7 @@
 #define Max(A,B) (((A)>(B))?(A):(B))
 #define ClampTop(A,X) Min(A,X)
 #define ClampBot(X,B) Max(X,B)
-#define Clamp(min,val,max) (((val)<(min))?(min):((val)>(max))?(max):(val))
+#define Clamp(val,min,max) (((val)<(min))?(min):((val)>(max))?(max):(val))
 
 #define IntFromPtr(p) (u64)((u8*)p - (u8*)0)
 #define PtrFromInt(i) (void*)((u8*)0 + (i))
@@ -285,7 +290,7 @@
 
 #define local_persist static
 #define global        static
-#define internal       static
+#define internal      static
 
 ////////////////////////////////
 // Types 
@@ -326,4 +331,4 @@ typedef double f64;
 typedef s8  b8;
 typedef s32 b32;
 
-#endif // F_CORE_H
+#endif // FZ_CORE_H

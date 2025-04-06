@@ -1,29 +1,5 @@
-internal f32 f32_min(f32 a, f32 b) {
-  f32 result = a;
-  if (b > a) {
-    result = b;
-  }
-  return result;
-}
-
-internal f32 f32_max(f32 a, f32 b) {
-  f32 result = a;
-  if (b < a) {
-    result = b;
-  }
-  return result;
-}
-
 internal f32 f32_abs(f32 value) {
   return fabsf(value);
-}
-
-internal f32 f32_clamp(f32 value, f32 min, f32 max) {
-  f32 result = (value < min)? min : value;
-  if (result > max) {
-    result = max;
-  }
-  return result;
 }
 
 internal f32 f32_lerp(f32 start, f32 end, f32 amount) {
@@ -46,12 +22,7 @@ internal f32 f32_wrap(f32 value, f32 min, f32 max) {
     return result;
 }
 
-internal b32 f32_equals(f32 a, f32 b) {
-  b32 result = (f32_abs(a - b)) <= (EPSILON*fmaxf(1.0f, fmaxf(f32_abs(a), f32_abs(b))));
-  return result;
-}
-
-internal f32 vector2_distance(Vec2f32 a, Vec2f32 b) {
+internal f32 vec2f32_distance(Vec2f32 a, Vec2f32 b) {
   f32 result = 0.0f;
   f32 dx = b.x - a.x;
   f32 dy = b.y - a.y;
@@ -59,7 +30,7 @@ internal f32 vector2_distance(Vec2f32 a, Vec2f32 b) {
   return result;
 }
 
-internal f32 vector2_distance_signed(Vec2f32 a, Vec2f32 b, Vec2f32 reference) {
+internal f32 vec2f32_distance_signed(Vec2f32 a, Vec2f32 b, Vec2f32 reference) {
   f32 result = 0.0f;
   f32 dx = b.x - a.x;
   f32 dy = b.y - a.y;
@@ -76,45 +47,54 @@ internal f32 vector2_distance_signed(Vec2f32 a, Vec2f32 b, Vec2f32 reference) {
   return result;
 }
 
-internal Vec2f32 vector2_add(Vec2f32 a, Vec2f32 b) {
-  // TODO(fz): Implement
-  return vec2f32(0.0f, 0.0f);
-}
-internal Vec2f32 vector2_sub(Vec2f32 a, Vec2f32 b) {
-  // TODO(fz): Implement
-  return vec2f32(0.0f, 0.0f);
+internal Vec2f32 vec2f32_add(Vec2f32 a, Vec2f32 b) {
+  Vec2f32 result;
+  result.x = a.x + b.x;
+  result.y = a.y + b.y;
+  return result;
 }
 
-internal Vec2f32 vector2_scale(Vec2f32 v, f32 scalar) {
-  // TODO(fz): Implement
-  return vec2f32(0.0f, 0.0f);
+internal Vec2f32 vec2f32_sub(Vec2f32 a, Vec2f32 b) {
+  Vec2f32 result;
+  result.x = a.x - b.x;
+  result.y = a.y - b.y;
+  return result;
 }
 
-internal Vec2f32 vector2_normalize(Vec2f32 v) {
-  // TODO(fz): Implement
-  return vec2f32(0.0f, 0.0f);
+internal Vec2f32 vec2f32_scale(Vec2f32 v, f32 scalar) {
+  Vec2f32 result;
+  result.x = v.x * scalar;
+  result.y = v.y * scalar;
+  return result;
 }
 
-internal f32 vector2_dot(Vec2f32 a, Vec2f32 b) {
-  // TODO(fz): Implement
-  return 0.0f;
+internal f32 vec2f32_dot(Vec2f32 a, Vec2f32 b) {
+  return a.x * b.x + a.y * b.y;
 }
 
-internal f32 vector2_length(Vec2f32 v) {
-  // TODO(fz): Implement  
-  return 0.0f;
+internal f32 vec2f32_length(Vec2f32 v) {
+  return sqrtf(v.x * v.x + v.y * v.y);
 }
 
-internal Vec3f32 vector3_from_vector4(Vec4f32 v) {
+internal Vec2f32 vec2f32_normalize(Vec2f32 v) {
+  f32 len = sqrtf(v.x * v.x + v.y * v.y);
+  Vec2f32 result;
+  if (len == 0.0f) {
+    result.x = 0.0f;
+    result.y = 0.0f;
+  } else {
+    result.x = v.x / len;
+    result.y = v.y / len;
+  }
+  return result;
+}
+
+internal Vec3f32 vec3f32_from_vec4f32(Vec4f32 v) {
   Vec3f32 result = { v.x, v.y, v.z };
   return result;
 }
 
-internal void print_vector3(Vec3f32 v, const char* label) {
-  printf("%sVector3(%.2ff, %.2ff, %.2ff)\n", label, v.x, v.y, v.z);
-}
-
-internal Vec3f32 vector3_add(Vec3f32 a, Vec3f32 b) {
+internal Vec3f32 vec3f32_add(Vec3f32 a, Vec3f32 b) {
   Vec3f32 result = {
     a.x + b.x,
     a.y + b.y,
@@ -123,7 +103,7 @@ internal Vec3f32 vector3_add(Vec3f32 a, Vec3f32 b) {
   return result;
 }
 
-internal Vec3f32 vector3_sub(Vec3f32 a, Vec3f32 b) {
+internal Vec3f32 vec3f32_sub(Vec3f32 a, Vec3f32 b) {
   Vec3f32 result = {
     a.x - b.x,
     a.y - b.y,
@@ -132,7 +112,7 @@ internal Vec3f32 vector3_sub(Vec3f32 a, Vec3f32 b) {
   return result;
 }
 
-internal Vec3f32 vector3_mul(Vec3f32 a, Vec3f32 b) {
+internal Vec3f32 vec3f32_mul(Vec3f32 a, Vec3f32 b) {
   Vec3f32 result = {
     a.x * b.x,
     a.y * b.y,
@@ -141,7 +121,7 @@ internal Vec3f32 vector3_mul(Vec3f32 a, Vec3f32 b) {
   return result;
 }
 
-internal Vec3f32 vector3_div(Vec3f32 a, Vec3f32 b) {
+internal Vec3f32 vec3f32_div(Vec3f32 a, Vec3f32 b) {
   Vec3f32 result = {
     a.x / b.x,
     a.y / b.y,
@@ -150,7 +130,7 @@ internal Vec3f32 vector3_div(Vec3f32 a, Vec3f32 b) {
   return result;
 }
 
-internal Vec4f32 mul_vector4_matrix4(Vec4f32 v, Mat4f32 m) {
+internal Vec4f32 vec4f32_mul_mat4f32(Vec4f32 v, Mat4f32 m) {
   Vec4f32 result = { 
     m.m0*v.x + m.m4*v.y + m.m8 *v.z + m.m12*v.w,
     m.m1*v.x + m.m5*v.y + m.m9 *v.z + m.m13*v.w,
@@ -160,7 +140,7 @@ internal Vec4f32 mul_vector4_matrix4(Vec4f32 v, Mat4f32 m) {
   return result;
 }
 
-internal Vec3f32 vector3_cross(Vec3f32 a, Vec3f32 b) {
+internal Vec3f32 vec3f32_cross(Vec3f32 a, Vec3f32 b) {
   Vec3f32 result = {
     a.y*b.z - a.z*b.y,
     a.z*b.x - a.x*b.z,
@@ -169,7 +149,7 @@ internal Vec3f32 vector3_cross(Vec3f32 a, Vec3f32 b) {
   return result;
 }
 
-internal Vec3f32 vector3_scale(Vec3f32 v, f32 scalar) {
+internal Vec3f32 vec3f32_scale(Vec3f32 v, f32 scalar) {
   Vec3f32 result = {
     v.x*scalar,
     v.y*scalar,
@@ -178,7 +158,7 @@ internal Vec3f32 vector3_scale(Vec3f32 v, f32 scalar) {
   return result;
 }
 
-internal Vec3f32 vector3_scale_xyz(Vec3f32 v, f32 scale_x, f32 scale_y, f32 scale_z) {
+internal Vec3f32 vec3f32_scale_xyz(Vec3f32 v, f32 scale_x, f32 scale_y, f32 scale_z) {
   Vec3f32 result = {
     v.x * scale_x,
     v.y * scale_y,
@@ -187,7 +167,7 @@ internal Vec3f32 vector3_scale_xyz(Vec3f32 v, f32 scale_x, f32 scale_y, f32 scal
   return result;  
 }
 
-internal Vec3f32 vector3_normalize(Vec3f32 v) {
+internal Vec3f32 vec3f32_normalize(Vec3f32 v) {
   Vec3f32 result = v;
   f32 length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
   if (length != 0.0f) {
@@ -199,16 +179,7 @@ internal Vec3f32 vector3_normalize(Vec3f32 v) {
   return result;
 }
 
-internal Vec3f32 mul_vector3_matrix4(Vec3f32 v, Mat4f32 m) {
-  Vec3f32 result = {
-    m.m0*v.x + m.m4*v.y + m.m8* v.z + m.m12,
-    m.m1*v.x + m.m5*v.y + m.m9* v.z + m.m13,
-    m.m2*v.x + m.m6*v.y + m.m10*v.z + m.m14
-  };
-  return result;
-}
-
-internal Vec3f32 vector3_rotate_by_axis(Vec3f32 v, Vec3f32 axis, f32 radians) {
+internal Vec3f32 vec3f32_rotate_by_axis(Vec3f32 v, Vec3f32 axis, f32 radians) {
   // Using Euler-Rodrigues Formula
   // Ref.: https://en.wikipedia.org/w/index.php?title=Euler%E2%80%93Rodrigues_formula
   
@@ -258,7 +229,7 @@ internal Vec3f32 vector3_rotate_by_axis(Vec3f32 v, Vec3f32 axis, f32 radians) {
   return result;
 }
 
-internal Vec3f32 vector3_lerp(Vec3f32 a, Vec3f32 b, f32 t) {
+internal Vec3f32 vec3f32_lerp(Vec3f32 a, Vec3f32 b, f32 t) {
   Vec3f32 result = {
     a.x + t*(b.x - a.x),
     a.y + t*(b.y - a.y),
@@ -267,7 +238,7 @@ internal Vec3f32 vector3_lerp(Vec3f32 a, Vec3f32 b, f32 t) {
   return result;
 }
 
-internal Vec3f32 vector3_unproject(Vec3f32 source, Mat4f32 projection, Mat4f32 view) {
+internal Vec3f32 vec3f32_unproject(Vec3f32 source, Mat4f32 projection, Mat4f32 view) {
   Vec3f32 result = { 0 };
   
   // Calculate unprojected matrix (multiply view matrix by projection matrix) and invert it
@@ -348,17 +319,24 @@ internal Vec3f32 vector3_unproject(Vec3f32 source, Mat4f32 projection, Mat4f32 v
   return result;
 }
 
-internal f32 vector3_dot(Vec3f32 a, Vec3f32 b) {
+internal Vec3f32 mat4f32_transform_vec3f32(Mat4f32 mat, Vec3f32 vec) {
+  f32 x = mat.m0 * vec.x + mat.m4 * vec.y + mat.m8  * vec.z;
+  f32 y = mat.m1 * vec.x + mat.m5 * vec.y + mat.m9  * vec.z;
+  f32 z = mat.m2 * vec.x + mat.m6 * vec.y + mat.m10 * vec.z;
+  return vec3f32(x, y, z);
+}
+
+internal f32 vec3f32_dot(Vec3f32 a, Vec3f32 b) {
   f32 result = a.x*b.x + a.y*b.y + a.z*b.z;
   return result;
 }
 
-internal f32 vector3_length(Vec3f32 v) {
+internal f32 vec3f32_length(Vec3f32 v) {
   f32 result = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
   return result;
 }
 
-internal f32 vector3_distance(Vec3f32 a, Vec3f32 b) {
+internal f32 vec3f32_distance(Vec3f32 a, Vec3f32 b) {
   f32 result = 0.0f;
   f32 dx = b.x - a.x;
   f32 dy = b.y - a.y;
@@ -367,7 +345,7 @@ internal f32 vector3_distance(Vec3f32 a, Vec3f32 b) {
   return result;
 }
 
-internal f32 vector3_angle(Vec3f32 a, Vec3f32 b) {
+internal f32 vec3f32_angle(Vec3f32 a, Vec3f32 b) {
   f32 result = 0.0f;
   Vec3f32 cross = {a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x};
   f32 len = sqrtf(cross.x*cross.x + cross.y*cross.y + cross.z*cross.z);
@@ -376,12 +354,12 @@ internal f32 vector3_angle(Vec3f32 a, Vec3f32 b) {
   return result;
 }
 
-internal Vec4f32 vector4_from_vector3(Vec3f32 v) {
+internal Vec4f32 vec4f32_from_vec3f32(Vec3f32 v) {
   Vec4f32 result = {v.x, v.y, v.z};
   return result;
 }
 
-internal Vec4f32 vector4_add(Vec4f32 a, Vec4f32 b) {
+internal Vec4f32 vec4f32_add(Vec4f32 a, Vec4f32 b) {
   Vec4f32 result = {
     a.x + b.x,
     a.y + b.y,
@@ -391,7 +369,7 @@ internal Vec4f32 vector4_add(Vec4f32 a, Vec4f32 b) {
   return result;
 }
 
-internal Vec4f32 vector4_sub(Vec4f32 a, Vec4f32 b) {
+internal Vec4f32 vec4f32_sub(Vec4f32 a, Vec4f32 b) {
   Vec4f32 result = {
     a.x - b.x,
     a.y - b.y,
@@ -401,7 +379,7 @@ internal Vec4f32 vector4_sub(Vec4f32 a, Vec4f32 b) {
   return result;
 }
 
-internal Vec4f32 vector4_mul(Vec4f32 a, Vec4f32 b) {
+internal Vec4f32 vec4f32_mul(Vec4f32 a, Vec4f32 b) {
   Vec4f32 result = {
     a.x * b.x,
     a.y * b.y,
@@ -411,7 +389,7 @@ internal Vec4f32 vector4_mul(Vec4f32 a, Vec4f32 b) {
   return result;
 }
 
-internal Vec4f32 vector4_div(Vec4f32 a, Vec4f32 b) {
+internal Vec4f32 vec4f32_div(Vec4f32 a, Vec4f32 b) {
   Vec4f32 result = {
     a.x / b.x,
     a.y / b.y,
@@ -421,7 +399,7 @@ internal Vec4f32 vector4_div(Vec4f32 a, Vec4f32 b) {
   return result;
 }
 
-internal Vec4f32 vector4_scale(Vec4f32 v, f32 scalar) {
+internal Vec4f32 vec4f32_scale(Vec4f32 v, f32 scalar) {
   Vec4f32 result = {
     v.x*scalar,
     v.y*scalar,
@@ -431,7 +409,7 @@ internal Vec4f32 vector4_scale(Vec4f32 v, f32 scalar) {
   return result;
 }
 
-internal Vec4f32 vector4_normalize(Vec4f32 v) {
+internal Vec4f32 vec4f32_normalize(Vec4f32 v) {
   Vec4f32 result = v;
   f32 length = sqrtf((v.x*v.x) + (v.y*v.y) + (v.z*v.z) + (v.w*v.w));
   if (length > 0) {
@@ -444,7 +422,7 @@ internal Vec4f32 vector4_normalize(Vec4f32 v) {
   return result;
 }
 
-internal Vec4f32 vector4_lerp(Vec4f32 a, Vec4f32 b, f32 t) {
+internal Vec4f32 vec4f32_lerp(Vec4f32 a, Vec4f32 b, f32 t) {
   Vec4f32 result = {
     a.x + t*(b.x - a.x),
     a.y + t*(b.y - a.y),
@@ -454,17 +432,17 @@ internal Vec4f32 vector4_lerp(Vec4f32 a, Vec4f32 b, f32 t) {
   return result;
 }
 
-internal f32 vector4_dot(Vec4f32 a, Vec4f32 b) {
+internal f32 vec4f32_dot(Vec4f32 a, Vec4f32 b) {
   f32 result = (a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w);
   return result;
 }
 
-internal f32 vector4_length(Vec4f32 v) {
+internal f32 vec4f32_length(Vec4f32 v) {
   f32 result = sqrtf((v.x*v.x) + (v.y*v.y) + (v.z*v.z) + (v.w*v.w));
   return result;
 }
 
-internal f32 vector4_distance(Vec4f32 a, Vec4f32 b) {
+internal f32 vec4f32_distance(Vec4f32 a, Vec4f32 b) {
   f32 result = 0.0f;
   f32 dx = a.x - b.x;
   f32 dy = a.y - b.y;
@@ -477,7 +455,7 @@ internal f32 vector4_distance(Vec4f32 a, Vec4f32 b) {
 //////////////////////////////////////////////
 // Matrix4 f32
 
-internal Mat4f32 matrix4_mul(Mat4f32 left, Mat4f32 right) {
+internal Mat4f32 mat4f32_mul(Mat4f32 left, Mat4f32 right) {
   Mat4f32 result = { 0 };
   result.m0  = left.m0 *right.m0 + left.m1 *right.m4 + left.m2 *right.m8  + left.m3 *right.m12;
   result.m1  = left.m0 *right.m1 + left.m1 *right.m5 + left.m2 *right.m9  + left.m3 *right.m13;
@@ -498,7 +476,7 @@ internal Mat4f32 matrix4_mul(Mat4f32 left, Mat4f32 right) {
   return result;
 }
 
-internal Mat4f32 matrix4_translate(f32 x, f32 y, f32 z) {
+internal Mat4f32 mat4f32_translate(f32 x, f32 y, f32 z) {
   Mat4f32 result = {
     1.0f, 0.0f, 0.0f, x,
     0.0f, 1.0f, 0.0f, y,
@@ -508,7 +486,7 @@ internal Mat4f32 matrix4_translate(f32 x, f32 y, f32 z) {
   return result;
 }
 
-internal Mat4f32 matrix4_rotate_axis(Vec3f32 axis, f32 radians) {
+internal Mat4f32 mat4f32_rotate_axis(Vec3f32 axis, f32 radians) {
   Mat4f32 result = { 0 };
   
   f32 x = axis.x;
@@ -550,7 +528,7 @@ internal Mat4f32 matrix4_rotate_axis(Vec3f32 axis, f32 radians) {
   return result;
 }
 
-internal Mat4f32 matrix4_rotate_x(f32 radians) {
+internal Mat4f32 mat4f32_rotate_x(f32 radians) {
   Mat4f32 result = {
     1.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f, 0.0f,
@@ -566,7 +544,7 @@ internal Mat4f32 matrix4_rotate_x(f32 radians) {
   return result;
 }
 
-internal Mat4f32 matrix4_rotate_y(f32 radians) {
+internal Mat4f32 mat4f32_rotate_y(f32 radians) {
   Mat4f32 result = {
     1.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f, 0.0f,
@@ -582,7 +560,7 @@ internal Mat4f32 matrix4_rotate_y(f32 radians) {
   return result;
 }
 
-internal Mat4f32 matrix4_rotate_z(f32 radians) {
+internal Mat4f32 mat4f32_rotate_z(f32 radians) {
   Mat4f32 result = {
     1.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f, 0.0f,
@@ -598,7 +576,7 @@ internal Mat4f32 matrix4_rotate_z(f32 radians) {
   return result;
 }
 
-internal Mat4f32 matrix4_rotate_xyz(Vec3f32 radians) {
+internal Mat4f32 mat4f32_rotate_xyz(Vec3f32 radians) {
   Mat4f32 result = {
     1.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f, 0.0f,
@@ -628,7 +606,7 @@ internal Mat4f32 matrix4_rotate_xyz(Vec3f32 radians) {
   return result;
 }
 
-internal Mat4f32 matrix4_rotate_zyx(Vec3f32 radians) {
+internal Mat4f32 mat4f32_rotate_zyx(Vec3f32 radians) {
   Mat4f32 result = { 0 };
   
   f32 cz = cosf(radians.z);
@@ -661,7 +639,7 @@ internal Mat4f32 matrix4_rotate_zyx(Vec3f32 radians) {
   return result;
 }
 
-internal Mat4f32 matrix4_transpose(Mat4f32 m) {
+internal Mat4f32 mat4f32_transpose(Mat4f32 m) {
   Mat4f32 result = { 0 };
   result.m0  = m.m0;
   result.m1  = m.m4;
@@ -682,7 +660,7 @@ internal Mat4f32 matrix4_transpose(Mat4f32 m) {
   return result;
 }
 
-internal Mat4f32 matrix4_scale(f32 x, f32 y, f32 z) {
+internal Mat4f32 mat4f32_scale(f32 x, f32 y, f32 z) {
   Mat4f32 result = {
     x,    0.0f, 0.0f, 0.0f,
     0.0f, y,    0.0f, 0.0f,
@@ -692,7 +670,7 @@ internal Mat4f32 matrix4_scale(f32 x, f32 y, f32 z) {
   return result;
 }
 
-internal Mat4f32 matrix4_frustum(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane) {
+internal Mat4f32 mat4f32_frustum(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane) {
   Mat4f32 result = { 0 };
   
   f32 rl = (f32)(right - left);
@@ -722,31 +700,38 @@ internal Mat4f32 matrix4_frustum(f64 left, f64 right, f64 bottom, f64 top, f64 n
   return result;
 }
 
-internal Mat4f32 matrix4_perspective(f64 fovy, f64 window_width, f64 window_height, f64 near_plane, f64 far_plane) {
+// TODO(Fz): These don't need to be f64 
+internal Mat4f32 mat4f32_perspective(f32 fov_degrees, f32 window_width, f32 window_height, f32 near_plane, f32 far_plane) {
   Mat4f32 result = { 0 };
   
-  f64 top = near_plane*tan(fovy*0.5);
-  f64 bottom = -top;
-  f64 right = top*(window_width/window_height);
-  f64 left = -right;
+  // FOV in degrees to FOVY in radians
+  f32 aspect = window_width / window_height;
+  f32 fov_rad = Radians(fov_degrees);
+  f32 half_fovy_rad = atan(tan(fov_rad / 2.0f) / aspect);
+  f32 fovy = half_fovy_rad * 2.0f;
+
+  f32 top = near_plane*tan(fovy*0.5);
+  f32 bottom = -top;
+  f32 right = top*(window_width/window_height);
+  f32 left = -right;
   
   // MatrixFrustum(-right, right, -top, top, near, far);
-  f32 rl = (f32)(right - left);
-  f32 tb = (f32)(top - bottom);
-  f32 fn = (f32)(far_plane - near_plane);
+  f32 rl = (right - left);
+  f32 tb = (top - bottom);
+  f32 fn = (far_plane - near_plane);
   
-  result.m0 = ((f32)near_plane*2.0f)/rl;
-  result.m5 = ((f32)near_plane*2.0f)/tb;
-  result.m8 = ((f32)right + (f32)left)/rl;
-  result.m9 = ((f32)top + (f32)bottom)/tb;
-  result.m10 = -((f32)far_plane + (f32)near_plane)/fn;
+  result.m0 = (near_plane*2.0f)/rl;
+  result.m5 = (near_plane*2.0f)/tb;
+  result.m8 = (right + left)/rl;
+  result.m9 = (top + bottom)/tb;
+  result.m10 = -(far_plane + near_plane)/fn;
   result.m11 = -1.0f;
-  result.m14 = -((f32)far_plane*(f32)near_plane*2.0f)/fn;
+  result.m14 = -(far_plane*near_plane*2.0f)/fn;
   
   return result;
 }
 
-internal Mat4f32 matrix4_ortographic(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane) {
+internal Mat4f32 mat4f32_ortographic(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane) {
   Mat4f32 result = { 0 };
   
   f32 rl = (f32)(right - left);
@@ -773,7 +758,7 @@ internal Mat4f32 matrix4_ortographic(f64 left, f64 right, f64 bottom, f64 top, f
   return result;
 }
 
-internal Mat4f32 matrix4_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
+internal Mat4f32 mat4f32_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
   Mat4f32 result = { 0 };
   
   f32 length = 0.0f;
@@ -826,7 +811,7 @@ internal Mat4f32 matrix4_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
   return result;
 }
 
-internal Mat4f32 matrix_from_quaternion(Quatf32 q) {
+internal Mat4f32 mat4f32_from_quatf32(Quatf32 q) {
   Mat4f32 result = mat4f32(1.0f);
 
   f32 a2 = q.x*q.x;
@@ -854,7 +839,7 @@ internal Mat4f32 matrix_from_quaternion(Quatf32 q) {
   return result;
 }
 
-internal Transformf32 transform_from_matrix4(Mat4f32 mat) {
+internal Transformf32 transformf32_from_mat4f32(Mat4f32 mat) {
   Transformf32 result = { 0 };
 
   // Extract translation.
@@ -882,9 +867,9 @@ internal Transformf32 transform_from_matrix4(Mat4f32 mat) {
   Vec3f32 def = vec3f32(d, e, f);
   Vec3f32 ghi = vec3f32(g, h, i);
 
-  f32 scalex = vector3_length(abc);
-  f32 scaley = vector3_length(def);
-  f32 scalez = vector3_length(ghi);
+  f32 scalex = vec3f32_length(abc);
+  f32 scaley = vec3f32_length(def);
+  f32 scalez = vec3f32_length(ghi);
   Vec3f32 s  = vec3f32(scalex, scaley, scalez);
   if (det < 0) {
     s = vec3f32(-s.x, -s.y, -s.z);
@@ -898,38 +883,40 @@ internal Transformf32 transform_from_matrix4(Mat4f32 mat) {
     clone.m0 /= s.x;
     clone.m5 /= s.y;
     clone.m10 /= s.z;
-    result.rotation = quaternion_from_matrix(clone);
+    result.rotation = quatf32_from_mat4f32(clone);
   }  else {
     result.rotation = quatf32_identity();
   }
+
+  return result;
 }
 
-internal Quatf32 quaternion_add(Quatf32 q1, Quatf32 q2) {
+internal Quatf32 quatf32_add(Quatf32 q1, Quatf32 q2) {
   Quatf32 result = {q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w};
   return result;
 }
 
-internal Quatf32 quaternion_add_value(Quatf32 q, f32 value) {
+internal Quatf32 quatf32_add_value(Quatf32 q, f32 value) {
   Quatf32 result = {q.x + value, q.y + value, q.z + value, q.w + value};
   return result;
 }
 
-internal Quatf32 quaternion_subtract(Quatf32 q1, Quatf32 q2) {
+internal Quatf32 quatf32_subtract(Quatf32 q1, Quatf32 q2) {
   Quatf32 result = {q1.x - q2.x, q1.y - q2.y, q1.z - q2.z, q1.w - q2.w};
   return result;
 }
 
-internal Quatf32 quaternion_subtract_value(Quatf32 q, f32 value) {
+internal Quatf32 quatf32_subtract_value(Quatf32 q, f32 value) {
   Quatf32 result = {q.x - value, q.y - value, q.z - value, q.w - value};
   return result;
 }
 
-internal f32 quaternion_length(Quatf32 q) {
+internal f32 quatf32_length(Quatf32 q) {
   f32 result = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
   return result;
 }
 
-internal Quatf32 quaternion_normalize(Quatf32 q) {
+internal Quatf32 quatf32_normalize(Quatf32 q) {
   Quatf32 result = { 0 };
 
   f32 length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
@@ -946,7 +933,7 @@ internal Quatf32 quaternion_normalize(Quatf32 q) {
   return result;
 }
 
-internal Quatf32 quaternion_invert(Quatf32 q) {
+internal Quatf32 quatf32_invert(Quatf32 q) {
   Quatf32 result = q;
   f32 lengthSq = q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w;
 
@@ -960,7 +947,7 @@ internal Quatf32 quaternion_invert(Quatf32 q) {
   return result;
 }
 
-internal Quatf32 quaternion_multiply(Quatf32 q1, Quatf32 q2) {
+internal Quatf32 quatf32_multiply(Quatf32 q1, Quatf32 q2) {
   Quatf32 result = { 0 };
   f32 qax = q1.x, qay = q1.y, qaz = q1.z, qaw = q1.w;
   f32 qbx = q2.x, qby = q2.y, qbz = q2.z, qbw = q2.w;
@@ -973,7 +960,7 @@ internal Quatf32 quaternion_multiply(Quatf32 q1, Quatf32 q2) {
   return result;
 }
 
-internal Quatf32 quaternion_scale(Quatf32 q, f32 scalar) {
+internal Quatf32 quatf32_scale(Quatf32 q, f32 scalar) {
   Quatf32 result = { 0 };
 
   result.x = q.x*scalar;
@@ -984,12 +971,12 @@ internal Quatf32 quaternion_scale(Quatf32 q, f32 scalar) {
   return result;
 }
 
-internal Quatf32 quaternion_divide(Quatf32 q1, Quatf32 q2) {
+internal Quatf32 quatf32_divide(Quatf32 q1, Quatf32 q2) {
   Quatf32 result = { q1.x/q2.x, q1.y/q2.y, q1.z/q2.z, q1.w/q2.w };
   return result;
 }
 
-internal Quatf32 quaternion_lerp(Quatf32 q1, Quatf32 q2, f32 amount) {
+internal Quatf32 quatf32_lerp(Quatf32 q1, Quatf32 q2, f32 amount) {
   Quatf32 result = { 0 };
 
   result.x = q1.x + amount*(q2.x - q1.x);
@@ -1000,7 +987,7 @@ internal Quatf32 quaternion_lerp(Quatf32 q1, Quatf32 q2, f32 amount) {
   return result;
 }
 
-internal Quatf32 quaternion_nlerp(Quatf32 q1, Quatf32 q2, f32 amount) {
+internal Quatf32 quatf32_nlerp(Quatf32 q1, Quatf32 q2, f32 amount) {
   Quatf32 result = { 0 };
 
   // QuaternionLerp(q1, q2, amount)
@@ -1025,7 +1012,7 @@ internal Quatf32 quaternion_nlerp(Quatf32 q1, Quatf32 q2, f32 amount) {
   return result;
 }
 
-internal Quatf32 quaternion_slerp(Quatf32 q1, Quatf32 q2, f32 amount) {
+internal Quatf32 quatf32_slerp(Quatf32 q1, Quatf32 q2, f32 amount) {
   Quatf32 result = { 0 };
 
 
@@ -1039,7 +1026,7 @@ internal Quatf32 quaternion_slerp(Quatf32 q1, Quatf32 q2, f32 amount) {
   if (f32_abs(cosHalfTheta) >= 1.0f) {
     result = q1;
   } else if (cosHalfTheta > 0.95f) {
-    result = quaternion_nlerp(q1, q2, amount);
+    result = quatf32_nlerp(q1, q2, amount);
   } else {
     f32 halfTheta = acosf(cosHalfTheta);
     f32 sinHalfTheta = sqrtf(1.0f - cosHalfTheta*cosHalfTheta);
@@ -1062,7 +1049,7 @@ internal Quatf32 quaternion_slerp(Quatf32 q1, Quatf32 q2, f32 amount) {
   return result;
 }
 
-internal Quatf32 quaternion_cubic_hermit_spline(Quatf32 q1, Quatf32 outTangent1, Quatf32 q2, Quatf32 inTangent2, f32 t) {
+internal Quatf32 quatf32_cubic_hermit_spline(Quatf32 q1, Quatf32 outTangent1, Quatf32 q2, Quatf32 inTangent2, f32 t) {
   // Calculate quaternion cubic spline interpolation using Cubic Hermite Spline algorithm
   // as described in the GLTF 2.0 specification: https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#interpolation-cubic
   f32 t2 = t*t;
@@ -1072,21 +1059,21 @@ internal Quatf32 quaternion_cubic_hermit_spline(Quatf32 q1, Quatf32 outTangent1,
   f32 h01 = -2*t3 + 3*t2;
   f32 h11 = t3 - t2;
 
-  Quatf32 p0 = quaternion_scale(q1, h00);
-  Quatf32 m0 = quaternion_scale(outTangent1, h10);
-  Quatf32 p1 = quaternion_scale(q2, h01);
-  Quatf32 m1 = quaternion_scale(inTangent2, h11);
+  Quatf32 p0 = quatf32_scale(q1, h00);
+  Quatf32 m0 = quatf32_scale(outTangent1, h10);
+  Quatf32 p1 = quatf32_scale(q2, h01);
+  Quatf32 m1 = quatf32_scale(inTangent2, h11);
   Quatf32 result = { 0 };
 
-  result = quaternion_add(p0, m0);
-  result = quaternion_add(result, p1);
-  result = quaternion_add(result, m1);
-  result = quaternion_normalize(result);
+  result = quatf32_add(p0, m0);
+  result = quatf32_add(result, p1);
+  result = quatf32_add(result, m1);
+  result = quatf32_normalize(result);
 
   return result;
 }
 
-internal Quatf32 quaternion_from_vector3_to_vector3(Vec3f32 from, Vec3f32 to) {
+internal Quatf32 quatf32_from_vec3f32_to_vec3f32(Vec3f32 from, Vec3f32 to) {
   Quatf32 result = { 0 };
 
   f32 cos2Theta = (from.x*to.x + from.y*to.y + from.z*to.z);    // Vector3DotProduct(from, to)
@@ -1114,7 +1101,7 @@ internal Quatf32 quaternion_from_vector3_to_vector3(Vec3f32 from, Vec3f32 to) {
   return result;
 }
 
-internal Quatf32 quaternion_from_matrix(Mat4f32 mat) {
+internal Quatf32 quatf32_from_mat4f32(Mat4f32 mat) {
   Quatf32 result = { 0 };
 
   f32 fourWSquaredMinus1 = mat.m0  + mat.m5 + mat.m10;
@@ -1173,7 +1160,7 @@ internal Quatf32 quaternion_from_matrix(Mat4f32 mat) {
   return result;
 }
 
-internal Quatf32 quaternion_from_axis_angle(Vec3f32 axis, f32 angle) {
+internal Quatf32 quatf32_from_axis_angle(Vec3f32 axis, f32 angle) {
   Quatf32 result = { 0.0f, 0.0f, 0.0f, 1.0f };
   f32 axisLength = sqrtf(axis.x*axis.x + axis.y*axis.y + axis.z*axis.z);
 
@@ -1183,7 +1170,7 @@ internal Quatf32 quaternion_from_axis_angle(Vec3f32 axis, f32 angle) {
     f32 length = 0.0f;
     f32 ilength = 0.0f;
 
-    // Vector3Normalize(axis)
+    // vec3f32_normalize
     length = axisLength;
     if (length == 0.0f) {
       length = 1.0f;
@@ -1201,7 +1188,7 @@ internal Quatf32 quaternion_from_axis_angle(Vec3f32 axis, f32 angle) {
     result.z = axis.z*sinres;
     result.w = cosres;
 
-    // QuaternionNormalize(q);
+    // quatf32_normalize
     Quatf32 q = result;
     length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
     if (length == 0.0f) {
@@ -1217,7 +1204,7 @@ internal Quatf32 quaternion_from_axis_angle(Vec3f32 axis, f32 angle) {
   return result;
 }
 
-internal void axis_angle_from_quaternion(Quatf32 q, Vec3f32 *axis, f32 *angle) {
+internal void axis_angle_from_quatf32(Quatf32 q, Vec3f32 *axis, f32 *angle) {
   if (f32_abs(q.w) > 1.0f) {
     f32 length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
     if (length == 0.0f) {
@@ -1250,7 +1237,7 @@ internal void axis_angle_from_quaternion(Quatf32 q, Vec3f32 *axis, f32 *angle) {
   *angle = resAngle;
 }
 
-internal Quatf32 quaternion_from_euler(f32 pitch, f32 yaw, f32 roll) {
+internal Quatf32 quatf32_from_euler(f32 pitch, f32 yaw, f32 roll) {
   Quatf32 result = { 0 };
 
   f32 x0 = cosf(pitch*0.5f);
@@ -1268,7 +1255,7 @@ internal Quatf32 quaternion_from_euler(f32 pitch, f32 yaw, f32 roll) {
   return result;
 }
 
-internal void euler_from_quaternion(Quatf32 q, f32* pitch, f32* yaw, f32* roll) {
+internal void euler_from_quatf32(Quatf32 q, f32* pitch, f32* yaw, f32* roll) {
   // Roll (x-axis rotation)
   f32 x0 = 2.0f*(q.w*q.x + q.y*q.z);
   f32 x1 = 1.0f - 2.0f*(q.x*q.x + q.y*q.y);
@@ -1286,7 +1273,7 @@ internal void euler_from_quaternion(Quatf32 q, f32* pitch, f32* yaw, f32* roll) 
   *roll = atan2f(z0, z1);
 }
 
-internal Quatf32 quaternion_mul_matrix4(Quatf32 q, Mat4f32 mat) {
+internal Quatf32 quatf32_mul_mat4f32(Quatf32 q, Mat4f32 mat) {
   Quatf32 result = { 0 };
 
   result.x = mat.m0*q.x + mat.m4*q.y + mat.m8*q.z + mat.m12*q.w;
@@ -1297,7 +1284,7 @@ internal Quatf32 quaternion_mul_matrix4(Quatf32 q, Mat4f32 mat) {
   return result;
 }
 
-internal b32 quaternion_equals(Quatf32 p, Quatf32 q) {
+internal b32 quatf32_equals(Quatf32 p, Quatf32 q) {
 
   b32 result = (((f32_abs(p.x - q.x)) <= (EPSILON*fmaxf(1.0f, fmaxf(f32_abs(p.x), f32_abs(q.x))))) &&
                 ((f32_abs(p.y - q.y)) <= (EPSILON*fmaxf(1.0f, fmaxf(f32_abs(p.y), f32_abs(q.y))))) &&
@@ -1309,4 +1296,68 @@ internal b32 quaternion_equals(Quatf32 p, Quatf32 q) {
                 ((f32_abs(p.w + q.w)) <= (EPSILON*fmaxf(1.0f, fmaxf(f32_abs(p.w), f32_abs(q.w))))));
 
   return result;
+}
+
+internal Vec3f32 quatf32_rotate_vec3f32(Quatf32 q, Vec3f32 v) {
+  Quatf32 q_norm = quatf32_normalize(q);
+  Quatf32 v_q = {0.0f, v.x, v.y, v.z};
+  Quatf32 q_conj = quatf32_invert(q_norm);
+  Quatf32 temp = quatf32_multiply(q_norm, v_q);
+  Quatf32 result = quatf32_multiply(temp, q_conj);
+  return (Vec3f32){result.x, result.y, result.z};
+}
+
+internal Quatf32 quatf32_conjugate(Quatf32 q) {
+  return (Quatf32){q.w, -q.x, -q.y, -q.z};
+}
+
+internal f32 quatf32_dot(Quatf32 q1, Quatf32 q2) {
+  return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
+}
+
+internal void vec2f32_print(Vec2f32 v, const char *label) {
+  printf("%s: Vec2f32\n", label);
+  printf("  x: %.6f\n", v.x);
+  printf("  y: %.6f\n", v.y);
+}
+
+internal void vec3f32_print(Vec3f32 v, const char *label) {
+  printf("%s: Vec3f32\n", label);
+  printf("  x: %.6f\n", v.x);
+  printf("  y: %.6f\n", v.y);
+  printf("  z: %.6f\n", v.z);
+}
+
+internal void vec4f32_print(Vec4f32 v, const char *label) {
+  printf("%s: Vec4f32\n", label);
+  printf("  x: %.6f\n", v.x);
+  printf("  y: %.6f\n", v.y);
+  printf("  z: %.6f\n", v.z);
+  printf("  w: %.6f\n", v.w);
+}
+
+internal void mat4f32_print(Mat4f32 m, const char *label) {
+  printf("%s: Mat4f32\n", label);
+  for (int row = 0; row < 4; row++) {
+    printf("  ");
+    for (int col = 0; col < 4; col++) {
+      printf("%.6f ", m.data[col][row]);
+    }
+    printf("\n");
+  }
+}
+
+internal void quatf32_print(Quatf32 q, const char *label) {
+  printf("%s: Quatf32\n", label);
+  printf("  x: %.6f\n", q.x);
+  printf("  y: %.6f\n", q.y);
+  printf("  z: %.6f\n", q.z);
+  printf("  w: %.6f\n", q.w);
+}
+
+internal void transformf32_print(Transformf32 t, const char *label) {
+  printf("%s: Transformf32\n", label);
+  vec3f32_print(t.translation, "  translation");
+  quatf32_print(t.rotation, "  rotation");
+  vec3f32_print(t.scale, "  scale");
 }

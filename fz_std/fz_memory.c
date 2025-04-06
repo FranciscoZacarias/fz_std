@@ -28,7 +28,7 @@ internal Arena* arena_init_sized(u64 reserve, u64 commit) {
     arena->position    = ARENA_HEADER_SIZE;
     arena->align       = DEFAULT_ALIGNMENT;
   } else {
-    error_message_and_exit("Error setting arena's memory");
+    ERROR_MESSAGE_AND_EXIT("Error setting arena's memory");
   }
   
   return arena;
@@ -41,27 +41,29 @@ internal void* arena_push(Arena* arena, u64 size) {
 }
 
 internal void* arena_push_no_zero(Arena* arena, u64 size) {
-  u64 position_memory = AlignPow2(arena->position, arena->align);
-  u64 new_position    = position_memory + size;
+  void *result = NULL;
+
+  if (arena->position + size <= arena->reserved) {
+    u64 position_memory = AlignPow2(arena->position, arena->align);
+    u64 new_position    = position_memory + size;
   
-  if (arena->commited < new_position) {
-    u64 commit_aligned = AlignPow2(new_position, arena->commit_size);
-    u64 commit_clamped = ClampTop(commit_aligned, arena->reserved);
-    u64 commit_size    = commit_clamped - arena->commited;
-    if (memory_commit((u8*)arena + arena->commited, commit_size)) {
-      arena->commited = commit_clamped;
-    } else {
-      printf("Could not commit memory when increasing the arena's committed memory.");
-      error_message_and_exit(0);
+    if (arena->commited < new_position) {
+      u64 commit_aligned = AlignPow2(new_position, arena->commit_size);
+      u64 commit_clamped = ClampTop(commit_aligned, arena->reserved);
+      u64 commit_size    = commit_clamped - arena->commited;
+      if (memory_commit((u8*)arena + arena->commited, commit_size)) {
+        arena->commited = commit_clamped;
+      } else {
+        ERROR_MESSAGE_AND_EXIT("Could not commit memory when increasing the arena's committed memory.");
+      }
     }
+    result = (u8*)arena + position_memory;
+    arena->position = new_position;
+  } else {
+    ERROR_MESSAGE_AND_EXIT("Trying to allocate too much memory to a non dynamic arena. Size: %llu, Arena->Position = %llu, Arena->reserved: %llu, Arena->Position+Size = %llu", size, arena->position, arena->reserved, arena->position+size);
   }
   
-  void* memory = NULL;
-  
-  memory = (u8*)arena + position_memory;
-  arena->position = new_position;
-  
-  return memory;
+  return result;
 }
 
 internal void  arena_pop(Arena* arena, u64 size) {
@@ -92,7 +94,7 @@ internal void  arena_free(Arena* arena) {
 }
 
 internal void arena_print(Arena *arena) {
-  f32 committed_percentage = ((double)arena->position / arena->commited) * 100.0;
+  f32 committed_percentage = ((f64)arena->position / arena->commited) * 100.0;
   printf("Arena { reserved: %llu, commited: %llu, commit_size: %llu, position: %llu, align: %llu, committed_percentage: %.2f%% }\n",
          arena->reserved, arena->commited, arena->commit_size, arena->position, arena->align, committed_percentage);
 }
