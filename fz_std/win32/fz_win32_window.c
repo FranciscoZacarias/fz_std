@@ -93,23 +93,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   // Initialize thread context
   thread_context_init_and_attach(&MainThreadContext);
 
-  // NOTE(fz): Common initialization for both window and console
 #if FZ_ENABLE_CONSOLE
-  // Attach console output if console is enabled
   attach_console_output();
 #endif
 
 #if FZ_ENABLE_WINDOW
   _input_init();
 
-  // If window is enabled, create the window
   _WindowHandle = win32_window_create(hInstance, FZ_WINDOW_WIDTH, FZ_WINDOW_HEIGHT);
   if (!_WindowHandle) {
     ERROR_MESSAGE_AND_EXIT("Failed to get window handle\n");
     return 1;
   }
 
-  // If opengl is enabled, this get overridden.
   _DeviceContextHandle = GetDC(_WindowHandle);
   if (!_DeviceContextHandle) {
       ERROR_MESSAGE_AND_EXIT("Failed to get device context\n");
@@ -118,20 +114,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif
 
 #if FZ_ENABLE_OPENGL
-  // Attach OpenGL context if OpenGL is enabled
   if (!attach_opengl_context())  return 1;
 #endif
 
-  // Initialize application-specific logic
   application_init();
 
-  // NOTE(fz): Main loop - common for both console and windowed applications
+  // NOTE(fz): Main loop
   MSG msg = {0};
   while (IsApplicationRunning) {
 #if FZ_ENABLE_WINDOW
   _input_update();
 
-  // Measure true frame time
   win32_timer_start(&_Timer_FrameTime);
   if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
     if (msg.message == WM_QUIT)  IsApplicationRunning = false;
@@ -140,7 +133,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   }
 #endif
 
-  // Measure application delta time
   win32_timer_start(&_Timer_DeltaTime);
   application_tick();
   win32_timer_end(&_Timer_DeltaTime);

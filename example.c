@@ -58,13 +58,13 @@
 
 // Run once at start of program
 void application_init() {
-  String a = StringLiteral("We are not your kind");
+  String a = Str8("We are not your kind");
   println_string(a);
 }
 
 // Run every tick. Return false to exit.
 void application_tick() {
-  println_string(StringLiteral("Press any key to exit..."));
+  println_string(Str8("Press any key to exit..."));
   getch();
   IsApplicationRunning = false;
 }
@@ -114,7 +114,7 @@ void application_init() {
   for (s32 i = 0; i < 500; i += 1) {
     win32_put_pixel(i, i, RGB(255, 0, 0));
   }
-  String a = StringLiteral("A line was drawn in the window!");
+  String a = Str8("A line was drawn in the window!");
   println_string(a);
 }
 
@@ -125,14 +125,14 @@ void application_tick() {
   }
   local_persist s32 offset = 1;
   if (input_is_key_pressed(KeyboardKey_A)) {
-    String a = StringLiteral("A was pressed");
+    String a = Str8("A was pressed");
     for (s32 i = 0; i < 500; i += 1) {
       win32_put_pixel(i + offset, i, RGB(255, 0, 0));
     }
     offset += 1;
   }
   if (input_is_key_down(KeyboardKey_D)) {
-    String a = StringLiteral("D is down");
+    String a = Str8("D is down");
     println_string(a);
     for (s32 i = 0; i < 500; i += 1) {
       win32_put_pixel(i + offset, i, RGB(255, 0, 0));
@@ -161,8 +161,8 @@ global OGL_Shader ShaderProgram;
 // Run once at start of program
 void application_init() {
   // Create shaders
-  OGL_Shader vertexShader = ogl_make_shader(StringLiteral("vertex_shader.glsl"), GL_VERTEX_SHADER);
-  OGL_Shader fragmentShader = ogl_make_shader(StringLiteral("fragment_shader.glsl"), GL_FRAGMENT_SHADER);
+  OGL_Shader vertexShader = ogl_make_shader(Str8("vertex_shader.glsl"), GL_VERTEX_SHADER);
+  OGL_Shader fragmentShader = ogl_make_shader(Str8("fragment_shader.glsl"), GL_FRAGMENT_SHADER);
 
   // Create program
   GLuint shaders[] = { vertexShader, fragmentShader };

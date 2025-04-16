@@ -1204,6 +1204,43 @@ internal Quatf32 quatf32_from_axis_angle(Vec3f32 axis, f32 angle) {
   return result;
 }
 
+internal Quatf32 quatf32_from_basis(Vec3f32 right, Vec3f32 up, Vec3f32 forward) {
+  f32 m00 = right.x,  m01 = up.x,  m02 = forward.x;
+  f32 m10 = right.y,  m11 = up.y,  m12 = forward.y;
+  f32 m20 = right.z,  m21 = up.z,  m22 = forward.z;
+
+  f32 trace = m00 + m11 + m22;
+  Quatf32 q;
+
+  if (trace > 0.0f) {
+    f32 s = sqrtf(trace + 1.0f) * 2.0f;
+    q.w = 0.25f * s;
+    q.x = (m21 - m12) / s;
+    q.y = (m02 - m20) / s;
+    q.z = (m10 - m01) / s;
+  } else if (m00 > m11 && m00 > m22) {
+    f32 s = sqrtf(1.0f + m00 - m11 - m22) * 2.0f;
+    q.w = (m21 - m12) / s;
+    q.x = 0.25f * s;
+    q.y = (m01 + m10) / s;
+    q.z = (m02 + m20) / s;
+  } else if (m11 > m22) {
+    f32 s = sqrtf(1.0f + m11 - m00 - m22) * 2.0f;
+    q.w = (m02 - m20) / s;
+    q.x = (m01 + m10) / s;
+    q.y = 0.25f * s;
+    q.z = (m12 + m21) / s;
+  } else {
+    f32 s = sqrtf(1.0f + m22 - m00 - m11) * 2.0f;
+    q.w = (m10 - m01) / s;
+    q.x = (m02 + m20) / s;
+    q.y = (m12 + m21) / s;
+    q.z = 0.25f * s;
+  }
+
+  return q;
+}
+
 internal void axis_angle_from_quatf32(Quatf32 q, Vec3f32 *axis, f32 *angle) {
   if (f32_abs(q.w) > 1.0f) {
     f32 length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
@@ -1315,20 +1352,20 @@ internal f32 quatf32_dot(Quatf32 q1, Quatf32 q2) {
   return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 }
 
-internal void vec2f32_print(Vec2f32 v, const char *label) {
+internal void vec2f32_print(Vec2f32 v, const char8 *label) {
   printf("%s: Vec2f32\n", label);
   printf("  x: %.6f\n", v.x);
   printf("  y: %.6f\n", v.y);
 }
 
-internal void vec3f32_print(Vec3f32 v, const char *label) {
+internal void vec3f32_print(Vec3f32 v, const char8 *label) {
   printf("%s: Vec3f32\n", label);
   printf("  x: %.6f\n", v.x);
   printf("  y: %.6f\n", v.y);
   printf("  z: %.6f\n", v.z);
 }
 
-internal void vec4f32_print(Vec4f32 v, const char *label) {
+internal void vec4f32_print(Vec4f32 v, const char8 *label) {
   printf("%s: Vec4f32\n", label);
   printf("  x: %.6f\n", v.x);
   printf("  y: %.6f\n", v.y);
@@ -1336,7 +1373,7 @@ internal void vec4f32_print(Vec4f32 v, const char *label) {
   printf("  w: %.6f\n", v.w);
 }
 
-internal void mat4f32_print(Mat4f32 m, const char *label) {
+internal void mat4f32_print(Mat4f32 m, const char8 *label) {
   printf("%s: Mat4f32\n", label);
   for (int row = 0; row < 4; row++) {
     printf("  ");
@@ -1347,7 +1384,7 @@ internal void mat4f32_print(Mat4f32 m, const char *label) {
   }
 }
 
-internal void quatf32_print(Quatf32 q, const char *label) {
+internal void quatf32_print(Quatf32 q, const char8 *label) {
   printf("%s: Quatf32\n", label);
   printf("  x: %.6f\n", q.x);
   printf("  y: %.6f\n", q.y);
@@ -1355,7 +1392,7 @@ internal void quatf32_print(Quatf32 q, const char *label) {
   printf("  w: %.6f\n", q.w);
 }
 
-internal void transformf32_print(Transformf32 t, const char *label) {
+internal void transformf32_print(Transformf32 t, const char8 *label) {
   printf("%s: Transformf32\n", label);
   vec3f32_print(t.translation, "  translation");
   quatf32_print(t.rotation, "  rotation");

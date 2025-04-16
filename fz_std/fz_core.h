@@ -275,7 +275,6 @@
 #define IsPow2(x)          ((x)!=0 && ((x)&((x)-1))==0)
 #define IsPow2OrZero(x)    ((((x) - 1)&(x)) == 0)
 
-
 #define MemoryCopy(dst, src, size) memcpy((dst), (src), (size))
 #define MemoryMove(dst, src, size) memmove((dst), (src), (size))
 #define MemorySet(dst, val, size)  memset((dst), (val), (size))
@@ -288,6 +287,10 @@
 #define MemoryZeroStruct(ptr) MemoryZero((ptr), sizeof(*(ptr)))
 #define MemoryZeroArray(arr)  MemoryZero((arr), sizeof(arr))
 
+#define SetFlag(flags, flag)    ((flags) |= (flag))
+#define HasFlags(flags, check_flags) (((flags) & (check_flags)) == (check_flags))
+#define ToggleFlag(flags, flag) ((flags) ^= (flag))
+
 #define local_persist static
 #define global        static
 #define internal      static
@@ -295,40 +298,67 @@
 ////////////////////////////////
 // Types 
 
+#if defined(__STDC_UTF_8__)
+typedef char8_t char8;
+#else
+typedef unsigned char char8;
+#endif
+#define CHAR8_MIN 0x00
+#define CHAR8_MAX 0xFF
+
+#if defined(__STDC_UTF_16__)
+typedef char16_t char16;
+#else
+typedef unsigned short char16;
+#endif
+#define CHAR16_MIN 0x0000
+#define CHAR16_MAX 0xFFFF
+
+#if defined(__STDC_UTF_32__)
+typedef char32_t char32;
+#else
+typedef unsigned int char32;
+#endif
+#define CHAR32_MIN 0x00000000
+#define CHAR32_MAX 0xFFFFFFFF
+
 typedef unsigned char      u8;
 typedef unsigned short     u16;
 typedef unsigned int       u32;
 typedef unsigned long long u64;
-#define U8_MAX  0xFF
 #define U8_MIN  0x00
-#define U16_MAX 0xFFFF
+#define U8_MAX  0xFF
 #define U16_MIN 0x0000
-#define U32_MAX 0xFFFFFFFFu
-#define U32_MIN 0x00000000u
-#define U64_MAX 0xFFFFFFFFFFFFFFFFull
-#define U64_MIN 0x0000000000000000ull
+#define U16_MAX 0xFFFF
+#define U32_MIN 0x00000000
+#define U32_MAX 0xFFFFFFFF
+#define U64_MIN 0x0000000000000000
+#define U64_MAX 0xFFFFFFFFFFFFFFFF
 
 typedef signed char      s8;
 typedef signed short     s16;
 typedef signed int       s32;
 typedef signed long long s64;
+#define S8_MIN  (-0x7F - 1)
 #define S8_MAX  0x7F
-#define S8_MIN  (-S8_MAX - 1)
+#define S16_MIN (-0x7FFF - 1)
 #define S16_MAX 0x7FFF
-#define S16_MIN (-S16_MAX - 1)
+#define S32_MIN (-0x7FFFFFFF - 1)
 #define S32_MAX 0x7FFFFFFF
-#define S32_MIN (-S32_MAX - 1)
-#define S64_MAX 0x7FFFFFFFFFFFFFFFll
-#define S64_MIN (-S64_MAX - 1ll)
+#define S64_MIN (-0x7FFFFFFFFFFFFFFF - 1)
+#define S64_MAX 0x7FFFFFFFFFFFFFFF
 
 typedef float  f32;
 typedef double f64;
-#define F32_MAX 0x1.fffffep+127f
-#define F32_MIN (-F32_MAX)
-#define F64_MAX 0x1.fffffffffffffp+1023
-#define F64_MIN (-F64_MAX)
 
-typedef s8  b8;
-typedef s32 b32;
+#define F32_MIN (-3.402823466e+38f)
+#define F32_MAX 3.402823466e+38f
+#define F32_EPSILON 1.192092896e-07f
+#define F64_MIN (-1.7976931348623158e+308)
+#define F64_MAX 1.7976931348623158e+308
+#define F64_EPSILON 2.2204460492503131e-16
+
+typedef unsigned char b8;
+typedef unsigned int  b32;
 
 #endif // FZ_CORE_H

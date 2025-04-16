@@ -95,6 +95,10 @@ typedef struct Transformf32 {
 #define Color_Brown      vec4f32(0.6f,  0.4f,  0.2f,  1.0f)
 #define Color_Pink       vec4f32(1.0f,  0.75f, 0.8f,  1.0f)
 
+#define AXIS_X vec3f32(1.0f, 0.0f, 0.0f)
+#define AXIS_Y vec3f32(0.0f, 1.0f, 0.0f)
+#define AXIS_Z vec3f32(0.0f, 0.0f, 1.0f)
+
 internal f32 f32_min(f32 a, f32 b);
 internal f32 f32_max(f32 a, f32 b);
 internal f32 f32_abs(f32 value);
@@ -199,11 +203,11 @@ internal f32     quatf32_dot(Quatf32 q1, Quatf32 q2);
 ///////////////////////
 //~ Prints
 
-internal void vec2f32_print(Vec2f32 v, const char *label);
-internal void vec3f32_print(Vec3f32 v, const char *label);
-internal void vec4f32_print(Vec4f32 v, const char *label);
-internal void mat4f32_print(Mat4f32 m, const char *label);
-internal void quatf32_print(Quatf32 q, const char *label);
-internal void transformf32_print(Transformf32 t, const char *label);
+internal void vec2f32_print(Vec2f32 v, const char8 *label);
+internal void vec3f32_print(Vec3f32 v, const char8 *label);
+internal void vec4f32_print(Vec4f32 v, const char8 *label);
+internal void mat4f32_print(Mat4f32 m, const char8 *label);
+internal void quatf32_print(Quatf32 q, const char8 *label);
+internal void transformf32_print(Transformf32 t, const char8 *label);
 
 #endif // FZ_MATH_H
