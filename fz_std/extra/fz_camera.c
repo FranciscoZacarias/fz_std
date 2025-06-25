@@ -1,4 +1,4 @@
-internal void camera_init(Camera* camera) {
+internal void camera_init(Camera* camera, Vec3f32 position, Vec3f32 look_at) {
   AssertNoReentry();
     
   camera->position    = vec3f32(0.0f, 0.0f, 5.0f);

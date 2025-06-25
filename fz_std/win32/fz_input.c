@@ -2,12 +2,11 @@ void _input_init() {
   AssertNoReentry();
   MemoryZeroStruct(&_InputState);
 
-  // TODO(fz): Change macros with the state of the app.
-  _InputState.mouse_current.screen_space_x = FZ_WINDOW_WIDTH/2;
-  _InputState.mouse_current.screen_space_y = FZ_WINDOW_HEIGHT/2;
+  _InputState.mouse_current.screen_space_x = WindowWidth/2;
+  _InputState.mouse_current.screen_space_y = WindowHeight/2;
   
-  _InputState.mouse_previous.screen_space_x = FZ_WINDOW_WIDTH/2;
-  _InputState.mouse_previous.screen_space_y = FZ_WINDOW_HEIGHT/2;
+  _InputState.mouse_previous.screen_space_x = WindowWidth/2;
+  _InputState.mouse_previous.screen_space_y = WindowHeight/2;
 }
 
 void _input_update() {

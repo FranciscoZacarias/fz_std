@@ -1,10 +1,10 @@
 
 internal Arena* arena_init() {
-  Arena* arena = arena_init_sized(ARENA_RESERVE_SIZE, ARENA_COMMIT_SIZE, "");
+  Arena* arena = arena_init_sized(ARENA_RESERVE_SIZE, ARENA_COMMIT_SIZE);
   return arena;
 }
 
-internal Arena* arena_init_sized(u64 reserve, u64 commit, const char8* label) {
+internal Arena* arena_init_sized(u64 reserve, u64 commit) {
   void* memory = NULL;
   
   u64 page_size = memory_get_page_size();

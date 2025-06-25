@@ -1,13 +1,7 @@
 #ifndef FZ_WIN32_PLATFORM_H
 #define FZ_WIN32_PLATFORM_H
 
-///////////////////////
-//~ Application space
-
-global b32 IsApplicationRunning = true;
-
-extern void application_init(); // Implement in application layer
-extern void application_tick(); // Implement in application layer
+// DOC(fz): User space API is at the bottom of the file. Look for the string //~ APPLICATION SPACE
 
 ///////////////////////
 //~ Timer
@@ -18,49 +12,31 @@ typedef struct PerformanceTimer {
 } PerformanceTimer;
 
 global LARGE_INTEGER    _PerformanceFrequency;
-global PerformanceTimer _Timer_DeltaTime   = {0}; 
 global PerformanceTimer _Timer_FrameTime   = {0};
 global PerformanceTimer _Timer_ElapsedTime = {0};
-
-internal f32 _get_elapsed_time();
-
-#define DeltaTime   _Timer_DeltaTime.elapsed_seconds
-#define FrameTime   _Timer_FrameTime.elapsed_seconds
-#define ElapsedTime _get_elapsed_time()
-
-void win32_timer_init();
-void win32_timer_start(PerformanceTimer* timer);
-void win32_timer_end(PerformanceTimer* timer);
 
 ///////////////////////
 //~ Window
 
-#if FZ_ENABLE_WINDOW
-
-# if !FZ_WINDOW_WIDTH || !FZ_WINDOW_HEIGHT
-#  define FZ_WINDOW_WIDTH  1280
-#  define FZ_WINDOW_HEIGHT 720
-# endif
-
-global HDC   _DeviceContextHandle    = NULL;
 global HGLRC _RenderingContextHandle = NULL;
-global HWND  _WindowHandle           = NULL;
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+internal HWND _win32_window_create(HINSTANCE hInstance, s32 width, s32 height);
+internal void _win32_window_resize_callback(s32 width, s32 height);
 
-internal HWND win32_window_create(HINSTANCE hInstance, s32 width, s32 height);
-internal void win32_window_resize_callback(s32 width, s32 height);
+///////////////////////
+//~ Win32
 
-# if FZ_ENABLE_WINDOW && !FZ_ENABLE_OPENGL
-internal void win32_put_pixel(s32 x, s32 y, COLORREF color);
-# endif // FZ_ENABLE_WINDOW && !FZ_ENABLE_OPENGL
+global HDC       _DeviceContextHandle  = NULL;
+global HWND      _WindowHandle         = NULL;
+global WPARAM    _ApplicationReturn    = 0;
+global HINSTANCE _hInstance            = (void*)0;
 
-#endif // FZ_ENABLE_WINDOW
+global b32    _IsWindowEnabled         = false;
+global b32    _IsOpenGLContextEnabled  = false;
+global b32    _IsTerminalEnabled       = false;
 
 ///////////////////////
 //~ Cursor
-
-#if FZ_ENABLE_WINDOW
 
 typedef enum Cursor_Type {
   CURSOR_ARROW,
@@ -73,27 +49,58 @@ typedef enum Cursor_Type {
   CURSOR_COUNT
 } CursorType;
 
-global b32 IgnoreNextMouseMove = false;
-global b32 IsCursorLocked      = false;
+global b32 _IgnoreNextMouseMove = false;
+global b32 _IsCursorLocked      = false;
+
+/////////////////////////
+//~ APPLICATION SPACE 
+//~ Doc(fz): User can access directly anything declared here. Variables, functions...
+
+global b32 IsApplicationRunning = true;
+global s32 WindowWidth          = 1280; 
+global s32 WindowHeight         = 720;
+
+internal void entry_point(); // DOC(fz): Application layer must implement this function as it's entry point.
+
+// Window
+internal void win32_init();
+internal b32  win32_enable_console();
+internal b32  win32_enable_window();
+internal b32  win32_enable_opengl();
+internal void win32_show_window(b32 show_window);
+internal b32  win32_application_is_running();
+internal void win32_application_stop();
+internal void win32_put_pixel(s32 x, s32 y, COLORREF color); // DOC(fz): Colors a specific pixel. Requires win32_enable_window and must not have opengl context attached.
+
+// Cursor
 internal void win32_set_cursor(CursorType cursor);
 internal void win32_set_cursor_position(s32 x, s32 y);
 internal void win32_lock_cursor(b32 lock);
 internal void win32_hide_cursor(b32 hide);
 
-#endif // FZ_ENABLE_WINDOW
+// Timer
+internal void win32_timer_init();
+internal void win32_timer_start(PerformanceTimer* timer);
+internal void win32_timer_end(PerformanceTimer* timer);
 
-///////////////////////
-//~ Window Components
+// Helpers
+internal f32 win32_get_elapsed_time();
 
-global b32 _IsOpenGLContextAttached = false;
-global b32 _IsTerminalAttached      = false;
-
-# if FZ_ENABLE_OPENGL
-internal b32  attach_opengl_context();
-# endif
-
-# if FZ_ENABLE_CONSOLE
-internal void attach_console_output();
-# endif
+//~ END APPLICATION SPACE
+/////////////////////////
 
 #endif // FZ_WIN32_PLATFORM_H
+
+
+
+
+
+
+
+
+
+
+
+
+
+

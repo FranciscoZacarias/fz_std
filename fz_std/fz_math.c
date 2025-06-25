@@ -700,7 +700,6 @@ internal Mat4f32 mat4f32_frustum(f64 left, f64 right, f64 bottom, f64 top, f64 n
   return result;
 }
 
-// TODO(Fz): These don't need to be f64 
 internal Mat4f32 mat4f32_perspective(f32 fov_degrees, f32 window_width, f32 window_height, f32 near_plane, f32 far_plane) {
   Mat4f32 result = { 0 };
   

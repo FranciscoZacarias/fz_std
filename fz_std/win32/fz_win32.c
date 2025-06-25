@@ -297,5 +297,6 @@ internal void _error_message_and_exit(const char8 *file, int line, const char8 *
   snprintf(detailed_buffer, sizeof(detailed_buffer), "Error at %s:%d in %s\n%s", file, line, func, buffer);
 
   MessageBoxA(0, detailed_buffer, "ahah idiot", MB_OK);
+  Breakpoint(); // TODO(fz): This should probably be wrapped around some debug setting?
   ExitProcess(1);
 }

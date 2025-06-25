@@ -1,4 +1,3 @@
-#if FZ_ENABLE_WINDOW
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
   switch (message) {
     case WM_SETCURSOR:
@@ -8,7 +7,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
       } break;
 
     case WM_SIZE: {
-      win32_window_resize_callback(LOWORD(lParam), HIWORD(lParam));
+      _win32_window_resize_callback(LOWORD(lParam), HIWORD(lParam));
       return 0;
     } break;
 
@@ -24,8 +23,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
     // Mouse Cursor
     case WM_MOUSEMOVE: {
-      if (IgnoreNextMouseMove) {
-        IgnoreNextMouseMove = false;
+      if (_IgnoreNextMouseMove) {
+        _IgnoreNextMouseMove = false;
         return 0;
       }
       s32 x = LOWORD(lParam);
@@ -70,91 +69,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
   }
   return DefWindowProc(hWnd, message, wParam, lParam);
 }
-#endif // FZ_ENABLE_WINDOW
 
-// NOTE(fz): App entry point
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-
-  // Ensure at least one of FZ_ENABLE_WINDOW or FZ_ENABLE_CONSOLE is defined
-#if !FZ_ENABLE_WINDOW && !FZ_ENABLE_CONSOLE
-  #error "At least one of FZ_ENABLE_WINDOW or FZ_ENABLE_CONSOLE must be defined."
-#endif
-
-#if FZ_ENABLE_OPENGL && !FZ_ENABLE_WINDOW
-  #error "Please define FZ_ENABLE_WINDOW if you're using FZ_ENABLE_OPENGL"
-#endif
-
-  // Initialize timers
-  win32_timer_init();
-  win32_timer_start(&_Timer_ElapsedTime);
-  win32_timer_start(&_Timer_DeltaTime);
-  win32_timer_start(&_Timer_FrameTime);
-
-  // Initialize thread context
-  thread_context_init_and_attach(&MainThreadContext);
-
-#if FZ_ENABLE_CONSOLE
-  attach_console_output();
-#endif
-
-#if FZ_ENABLE_WINDOW
-  _input_init();
-
-  _WindowHandle = win32_window_create(hInstance, FZ_WINDOW_WIDTH, FZ_WINDOW_HEIGHT);
-  if (!_WindowHandle) {
-    ERROR_MESSAGE_AND_EXIT("Failed to get window handle\n");
-    return 1;
-  }
-
-  _DeviceContextHandle = GetDC(_WindowHandle);
-  if (!_DeviceContextHandle) {
-      ERROR_MESSAGE_AND_EXIT("Failed to get device context\n");
-      return 1;
-  }
-#endif
-
-#if FZ_ENABLE_OPENGL
-  if (!attach_opengl_context())  return 1;
-#endif
-
-  application_init();
-
-  // NOTE(fz): Main loop
-  MSG msg = {0};
-  while (IsApplicationRunning) {
-#if FZ_ENABLE_WINDOW
-  _input_update();
-
-  win32_timer_start(&_Timer_FrameTime);
-  if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-    if (msg.message == WM_QUIT)  IsApplicationRunning = false;
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
-  }
-#endif
-
-  win32_timer_start(&_Timer_DeltaTime);
-  application_tick();
-  win32_timer_end(&_Timer_DeltaTime);
-
-#if FZ_ENABLE_WINDOW
-  win32_timer_end(&_Timer_FrameTime);
-#endif
-  }
-
-  return (s32)msg.wParam;
+  _hInstance = hInstance;
+  entry_point();
+  return _ApplicationReturn;
 }
 
-#if FZ_ENABLE_WINDOW
-internal void win32_window_resize_callback(s32 width, s32 height) {
+internal void _win32_window_resize_callback(s32 width, s32 height) {
   if (height == 0) { 
     height = 1;
   }
-  if (_IsOpenGLContextAttached) {
+  if (width == 0) {
+    width = 1;
+  }
+  WindowWidth  = width;
+  WindowHeight = height;
+  if (_IsOpenGLContextEnabled) {
     glViewport(0, 0, width, height);
   }
 }
-#endif // FZ_ENABLE_WINDOW
 
 internal void win32_timer_init() {
   AssertNoReentry();
@@ -171,8 +105,7 @@ internal void win32_timer_end(PerformanceTimer* timer) {
   timer->elapsed_seconds = (f32)difference / (f32)_PerformanceFrequency.QuadPart;
 }
 
-#if FZ_ENABLE_WINDOW
-internal HWND win32_window_create(HINSTANCE hInstance, s32 width, s32 height) {
+internal HWND _win32_window_create(HINSTANCE hInstance, s32 width, s32 height) {
   HWND result = {0};
 
   WNDCLASS wc      = {0};
@@ -190,15 +123,14 @@ internal HWND win32_window_create(HINSTANCE hInstance, s32 width, s32 height) {
 #endif
 
   result = CreateWindow("OpenGLWindow", app_name,
-                        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                        WS_OVERLAPPEDWINDOW,
                         CW_USEDEFAULT, CW_USEDEFAULT, width, height,
                         NULL, NULL, hInstance, NULL);
-    
+  WindowWidth  = width;
+  WindowHeight = height;
   return result;
 }
-#endif // FZ_ENABLE_WINDOW
 
-#if FZ_ENABLE_WINDOW
 internal void win32_set_cursor(CursorType cursor) {
   HCURSOR hCursor = NULL;
 
@@ -237,15 +169,11 @@ internal void win32_set_cursor(CursorType cursor) {
     SetCursor(hCursor);
   }
 }
-#endif 
 
-#if FZ_ENABLE_WINDOW
 internal void win32_set_cursor_position(s32 x, s32 y) {
   SetCursorPos(x, y);
 }
-#endif // FZ_ENABLE_WINDOW
 
-#if FZ_ENABLE_WINDOW
 internal void win32_lock_cursor(b32 lock) {
   if (lock) {
     RECT rect;
@@ -254,8 +182,8 @@ internal void win32_lock_cursor(b32 lock) {
     ClientToScreen(_WindowHandle, &center);
     SetCursorPos(center.x, center.y);
 
-    IsCursorLocked      = true;
-    IgnoreNextMouseMove = true;
+    _IsCursorLocked      = true;
+    _IgnoreNextMouseMove = true;
 
     // Reset deltas to avoid cursor jump
     _InputState.mouse_current.delta_x  = 0.0f;
@@ -264,31 +192,45 @@ internal void win32_lock_cursor(b32 lock) {
     _InputState.mouse_previous.delta_y = 0.0f;
     MemoryCopyStruct(&_InputState.mouse_previous, &_InputState.mouse_current);
   } else {
-    IsCursorLocked = false;
+    _IsCursorLocked = false;
   }
 }
-#endif // FZ_ENABLE_WINDOW
 
-#if FZ_ENABLE_WINDOW
 internal void win32_hide_cursor(b32 hide) {
   // Win32 quirk. It has an internal counter required to show the cursor.
   // The while loops just make sure it exhausts the counter and applies immediately.
   while (ShowCursor(hide ? FALSE : TRUE) >= 0 &&  hide);
   while (ShowCursor(hide ? FALSE : TRUE) < 0  && !hide);
 }
-#endif  // FZ_ENABLE_WINDOW
 
-#if FZ_ENABLE_WINDOW && !FZ_ENABLE_OPENGL
 internal void win32_put_pixel(s32 x, s32 y, COLORREF color) {
-  if (_DeviceContextHandle) {
-    SetPixel(_DeviceContextHandle, x, y, color);
+  if (_IsOpenGLContextEnabled) {
+    ERROR_MESSAGE_AND_EXIT("Called win32_put_pixel with opengl context attached");
   }
+  if (!_IsWindowEnabled) {
+    ERROR_MESSAGE_AND_EXIT("Called win32_put_pixel win32_enable_window");
+  }
+  SetPixel(_DeviceContextHandle, x, y, color);
 }
-#endif // FZ_ENABLE_WINDOW && !FZ_ENABLE_OPENGL
 
-#if FZ_ENABLE_OPENGL
-internal b32 attach_opengl_context() {
+internal f32 win32_get_elapsed_time() {
+  LARGE_INTEGER current;
+  QueryPerformanceCounter(&current);
+  LONGLONG ticks = current.QuadPart - _Timer_ElapsedTime.start.QuadPart;
+  return (f32)ticks / (f32)_PerformanceFrequency.QuadPart;
+}
+
+internal f32 win32_get_frame_time() {
+  return _Timer_FrameTime.elapsed_seconds;
+}
+
+internal b32 win32_enable_opengl() {
   b32 result = true;
+
+  if (!_IsWindowEnabled) {
+    return false;
+  }
+
   _DeviceContextHandle = GetDC(_WindowHandle);
   if (!_DeviceContextHandle) {
     ERROR_MESSAGE_AND_EXIT("Failed to get device context\n");
@@ -359,24 +301,75 @@ internal b32 attach_opengl_context() {
   }
 
   printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
-  _IsOpenGLContextAttached = true;
+  _IsOpenGLContextEnabled = true;
   return result;
 }
-#endif // FZ_ENABLE_OPENGL
 
-#if FZ_ENABLE_CONSOLE
-internal void attach_console_output() {
-  AllocConsole();
+internal void win32_show_window(b32 show_window) {
+  ShowWindow(_WindowHandle, show_window ? SW_SHOW : SW_HIDE);
+  UpdateWindow(_WindowHandle);
+}
+
+internal void win32_init() {
+  win32_timer_init();
+  win32_timer_start(&_Timer_ElapsedTime);
+
+  thread_context_init_and_attach(&MainThreadContext);
+  win32_timer_start(&_Timer_FrameTime);
+}
+
+internal b32 win32_enable_console() {
+  BOOL result = AllocConsole();
+  if (!result) {
+    return false;
+  }
   FILE* fp;
   freopen_s(&fp, "CONOUT$", "w", stdout);
   freopen_s(&fp, "CONOUT$", "w", stderr);
-  _IsTerminalAttached = true;
+  _IsTerminalEnabled = true;
+  return true;
 }
-#endif // FZ_ENABLE_CONSOLE
 
-internal f32 _get_elapsed_time(void) {
-  LARGE_INTEGER current;
-  QueryPerformanceCounter(&current);
-  LONGLONG ticks = current.QuadPart - _Timer_ElapsedTime.start.QuadPart;
-  return (f32)ticks / (f32)_PerformanceFrequency.QuadPart;
+internal b32 win32_enable_window() {
+  _input_init();
+
+  _WindowHandle = _win32_window_create(_hInstance, WindowWidth, WindowHeight);
+  if (!_WindowHandle) {
+    ERROR_MESSAGE_AND_EXIT("Failed to get window handle\n");
+    return false;
+  }
+
+  _DeviceContextHandle = GetDC(_WindowHandle);
+  if (!_DeviceContextHandle) {
+      ERROR_MESSAGE_AND_EXIT("Failed to get device context\n");
+      return false;
+  }
+
+  _IsWindowEnabled = true;
+  return true;
+}
+
+internal void win32_application_stop() {
+  IsApplicationRunning = false;
+}
+
+internal b32  win32_application_is_running() {
+  win32_timer_end(&_Timer_FrameTime);
+  win32_timer_start(&_Timer_FrameTime);
+
+  MSG msg = {0};
+  if (_IsWindowEnabled) {
+    _input_update();
+    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+      if (msg.message == WM_QUIT)  IsApplicationRunning = false;
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+  }
+  if (!IsApplicationRunning) {
+    _ApplicationReturn = (s32)msg.wParam;
+    return false;
+  }
+
+  return true;
 }
