@@ -1,9 +1,11 @@
-internal void camera_init(Camera* camera, Vec3f32 position, Vec3f32 look_at) {
+internal void camera_init(Camera* camera, Vec3f32 position, Vec3f32 look_at, f32 speed, f32 sensitivity) {
   AssertNoReentry();
     
   camera->position    = vec3f32(0.0f, 0.0f, 5.0f);
   camera->orientation = quatf32_identity();
   camera->fov         = 90.0f;
+  camera->speed       = speed;
+  camera->sensitivity = sensitivity;
   camera->mode        = CameraMode_Select;
 }
 
@@ -21,11 +23,7 @@ internal void camera_update(Camera* camera, f32 delta_time) {
 
     camera->mode = CameraMode_Fly;
 
-#ifdef FZ_CAMERA_SPEED
-    f32 camera_speed = (f32)(FZ_CAMERA_SPEED * delta_time);
-#else
-    f32 camera_speed = (f32)(8.0f * delta_time);
-#endif
+    f32 camera_speed = (f32)(camera->speed * delta_time);
 
     Vec3f32 forward = camera_get_forward(camera);
     Vec3f32 right   = camera_get_right(camera);
@@ -40,9 +38,7 @@ internal void camera_update(Camera* camera, f32 delta_time) {
 
     // Mouse look
     f32 sensitivity = 0.0015f;
-#ifdef FZ_CAMERA_SENSITIVITY
-    sensitivity *= FZ_CAMERA_SENSITIVITY;
-#endif
+    sensitivity *= camera->sensitivity;
 
     f32 dx = _InputState.mouse_current.delta_x;
     f32 dy = _InputState.mouse_current.delta_y;

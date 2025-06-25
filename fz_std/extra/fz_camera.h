@@ -24,10 +24,12 @@ typedef struct Camera {
   Vec3f32 position;
   Quatf32 orientation;
   f32 fov;
+  f32 speed;
+  f32 sensitivity;
   Camera_Mode mode;
 } Camera;
 
-internal void    camera_init(Camera* camera, Vec3f32 position, Vec3f32 look_at);
+internal void    camera_init(Camera* camera, Vec3f32 position, Vec3f32 look_at, f32 speed, f32 sensitivity);
 internal void    camera_update(Camera* camera, f32 delta_time);
 internal Vec3f32 camera_get_forward(Camera* camera);
 internal Vec3f32 camera_get_right(Camera* camera);
