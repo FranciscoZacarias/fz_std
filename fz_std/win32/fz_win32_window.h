@@ -57,16 +57,17 @@ global b32 _IsCursorLocked      = false;
 //~ Doc(fz): User can access directly anything declared here. Variables, functions...
 
 global b32 IsApplicationRunning = true;
-global s32 WindowWidth          = 1280; 
-global s32 WindowHeight         = 720;
-
+global s32 WindowWidth  = 0.0f;
+global s32 WindowHeight = 0.0f;
 internal void entry_point(); // DOC(fz): Application layer must implement this function as it's entry point.
 
 // Window
 internal void win32_init();
 internal b32  win32_enable_console();
-internal b32  win32_enable_window();
+internal b32  win32_enable_window(s32 width, s32 height);
 internal b32  win32_enable_opengl();
+internal void win32_get_webgl_functions(); 
+
 internal void win32_show_window(b32 show_window);
 internal b32  win32_application_is_running();
 internal void win32_application_stop();
@@ -84,7 +85,8 @@ internal void win32_timer_start(PerformanceTimer* timer);
 internal void win32_timer_end(PerformanceTimer* timer);
 
 // Helpers
-internal f32 win32_get_elapsed_time();
+internal f32  win32_get_elapsed_time();
+internal void win32_fatal_error(const char* message, ...);
 
 //~ END APPLICATION SPACE
 /////////////////////////

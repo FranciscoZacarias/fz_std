@@ -13,6 +13,14 @@ internal String8 string8_range(char8* first, char8* range) {
   return result;
 }
 
+internal String8 string8_concat(Arena* arena, String8 a, String8 b) {
+  String8 result = { 0 };
+  result.size = a.size + b.size;
+  result.str = ArenaPush(arena, char8, result.size);
+  MemoryCopy(result.str, a.str, a.size);
+  MemoryCopy(result.str + a.size, b.str, b.size);
+}
+
 internal b32 string8_equal(String8 a, String8 b) {
   if (a.size != b.size) {
     return 0;

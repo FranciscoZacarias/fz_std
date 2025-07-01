@@ -50,6 +50,10 @@ internal HANDLE _win32_get_file_handle_write(String8 file_path) {
 
 internal b32 file_create(String8 file_path) {
   b32 result  = 0;
+  if (file_exists(file_path)) {
+    return result;
+  }
+
   HANDLE file = CreateFileA(file_path.str, GENERIC_READ, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
   DWORD error = GetLastError();  
   if (error == ERROR_SUCCESS || error == ERROR_FILE_EXISTS) {
@@ -130,7 +134,8 @@ internal File_List file_get_all_files_in_path_recursively(Arena* arena, String8 
       full_path_str[current_dir.size] = '\\';
       memcpy(full_path_str + current_dir.size + 1, filename8.str, filename8.size);
       full_path_str[full_path_size] = '\0';
-
+      
+      // TODO(fz): This is just getting impl files. This should be an argument
       b32 is_directory = HasFlags(find_data.dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY);
       b32 is_c_file    = !is_directory && file_has_extension(filename8, Str8("c"));
       b32 is_h_file    = !is_directory && file_has_extension(filename8, Str8("h"));
@@ -210,8 +215,14 @@ internal b32 file_exists(String8 file_path) {
   return result;
 }
 
+
+// TODO(fz): This should either append or overrite. Or maybe a separate file_append function
 internal u32 file_write(String8 file_path, u8* data, u64 data_size) {
   s32 bytes_written = 0;
+  if (!file_exists(file_path)) {
+    file_create(file_path);
+  }
+
   HANDLE file_handle = _win32_get_file_handle_write(file_path);
 
   if (!WriteFile(file_handle, data, data_size, &bytes_written, NULL)) {
@@ -294,9 +305,14 @@ internal void _error_message_and_exit(const char8 *file, int line, const char8 *
   va_end(args);
 
   char8 detailed_buffer[2048];
-  snprintf(detailed_buffer, sizeof(detailed_buffer), "Error at %s:%d in %s\n%s", file, line, func, buffer);
+  MemoryZero(detailed_buffer, 2048);
+  s32 len = snprintf(detailed_buffer, sizeof(detailed_buffer), "Error at %s:%d in %s\n%s", file, line, func, buffer);
+  
+  if (ErrorLogFile.size > 0) {
+    file_write(ErrorLogFile, detailed_buffer, len);
+  }
 
-  MessageBoxA(0, detailed_buffer, "ahah idiot", MB_OK);
   Breakpoint(); // TODO(fz): This should probably be wrapped around some debug setting?
+  MessageBoxA(0, detailed_buffer, "ERROR: fz_std", MB_OK);
   ExitProcess(1);
 }

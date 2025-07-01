@@ -1,9 +1,13 @@
 #ifndef FZ_WIN32_H
 #define FZ_WIN32_H
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <userenv.h>
+
+#if defined(_WIN32) && !defined(APIENTRY) && !defined(__CYGWIN__) && !defined(__SCITECH_SNAP__)
+#ifndef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN 1
+#endif
+# include <windows.h>
+#endif
 
 ///////////////////////
 //~ Win32
@@ -80,6 +84,11 @@ internal void println_string(String8 string); // TODO(fz): This should be abstra
 ///////////////////////
 //~ Error
 // TODO(Fz): I'm not sure if I like this macro. Feels constrained and unecessary
+String8 ErrorLogFile = { 0 };
+internal void set_error_log_file(String8 file_path) {
+  ErrorLogFile = file_path;
+}
+
 #define ERROR_MESSAGE_AND_EXIT(fmt, ...) _error_message_and_exit(__FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
 internal void _error_message_and_exit(const char8 *file, int line, const char8 *func, const char8 *fmt, ...);
 
