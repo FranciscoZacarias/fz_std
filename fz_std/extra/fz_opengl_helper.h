@@ -3,8 +3,7 @@
 
 #define OPENGL_MAX_SHADER_STAGES 6
 
-internal GLuint opengl_compile_program(String8 source_path, GLenum shader_stage);
-internal GLuint opengl_create_pipeline(GLuint* programs, u32 count);
+internal GLuint opengl_compile_program(String8 source_path, GLenum kind);
 internal void   opengl_delete_program(GLuint program);
   
 internal void opengl_set_uniform_mat4fv(u32 program, const char8* uniform, Mat4f32 mat);
@@ -53,8 +52,9 @@ internal void opengl_check_error(const char* context) {
       case GL_INVALID_OPERATION:             err_str = "GL_INVALID_OPERATION"; break;
       case GL_INVALID_FRAMEBUFFER_OPERATION: err_str = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
       case GL_OUT_OF_MEMORY:                 err_str = "GL_OUT_OF_MEMORY"; break;
+      case GL_STACK_UNDERFLOW:               err_str = "GL_STACK_UNDERFLOW"; break;
+      case GL_STACK_OVERFLOW:                err_str = "GL_STACK_OVERFLOW"; break;
     }
-
     opengl_fatal_error("OpenGL error in %s: %s (0x%X)", context, err_str, err);
   }
 }

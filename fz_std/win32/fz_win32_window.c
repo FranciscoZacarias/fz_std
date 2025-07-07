@@ -60,8 +60,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     } break;
 
     case WM_DESTROY: {
+    #if 0 // TODO(Fz): check for opengl
       wglMakeCurrent(NULL, NULL);
       wglDeleteContext(_RenderingContextHandle);
+    #endif
       ReleaseDC(hWnd, _DeviceContextHandle);
       PostQuitMessage(0);
       return 0;
@@ -70,8 +72,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
   return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
+// This should be in fz_win32.c/.h
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
   _hInstance = hInstance;
+  thread_context_init_and_attach(&MainThreadContext);
   entry_point();
   return _ApplicationReturn;
 }
@@ -244,21 +248,34 @@ internal void win32_show_window(b32 show_window) {
 internal void win32_init() {
   win32_timer_init();
   win32_timer_start(&_Timer_ElapsedTime);
-
-  thread_context_init_and_attach(&MainThreadContext);
   win32_timer_start(&_Timer_FrameTime);
 }
 
 internal b32 win32_enable_console() {
-  BOOL result = AllocConsole();
-  if (!result) {
-    return false;
+  if (GetConsoleWindow() != NULL) {
+    // Already attached to a console; no need to allocate a new one.
+    return true;
   }
-  FILE* fp;
-  freopen_s(&fp, "CONOUT$", "w", stdout);
-  freopen_s(&fp, "CONOUT$", "w", stderr);
-  _IsTerminalEnabled = true;
-  return true;
+
+  // Try attaching to parent process console.
+  if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+    FILE* fp;
+    freopen_s(&fp, "CONOUT$", "w", stdout);
+    freopen_s(&fp, "CONOUT$", "w", stderr);
+    _IsTerminalEnabled = true;
+    return true;
+  }
+		
+  // No console attached; allocate a new one.
+  if (AllocConsole()) {
+    FILE* fp;
+    freopen_s(&fp, "CONOUT$", "w", stdout);
+    freopen_s(&fp, "CONOUT$", "w", stderr);
+    _IsTerminalEnabled = true;
+    return true;
+  }
+
+  return false;
 }
 
 internal b32 win32_enable_window(s32 width, s32 height) {
@@ -421,20 +438,66 @@ internal void win32_get_webgl_functions() {
 }
 
 // TODO(fz) if opengl is enabled...
-internal void APIENTRY opengl_debug_callback(
-    GLenum source, GLenum type, GLuint id, GLenum severity,
-    GLsizei length, const GLchar* message, const void* user)
-{
-    OutputDebugStringA(message);
+internal void APIENTRY opengl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *user) {
+  // Decode source
+  const char *source_str = "Unknown";
+  switch (source) {
+    case GL_DEBUG_SOURCE_API:             source_str = "API"; break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   source_str = "Window System"; break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER: source_str = "Shader Compiler"; break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:     source_str = "Third Party"; break;
+    case GL_DEBUG_SOURCE_APPLICATION:     source_str = "Application"; break;
+    case GL_DEBUG_SOURCE_OTHER:           source_str = "Other"; break;
+  }
+
+  // Decode type
+  const char *type_str = "Unknown";
+  switch (type) {
+    case GL_DEBUG_TYPE_ERROR:               type_str = "Error"; break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: type_str = "Deprecated Behavior"; break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  type_str = "Undefined Behavior"; break;
+    case GL_DEBUG_TYPE_PORTABILITY:         type_str = "Portability"; break;
+    case GL_DEBUG_TYPE_PERFORMANCE:         type_str = "Performance"; break;
+    case GL_DEBUG_TYPE_MARKER:              type_str = "Marker"; break;
+    case GL_DEBUG_TYPE_PUSH_GROUP:          type_str = "Push Group"; break;
+    case GL_DEBUG_TYPE_POP_GROUP:           type_str = "Pop Group"; break;
+    case GL_DEBUG_TYPE_OTHER:               type_str = "Other"; break;
+  }
+
+  // Decode severity
+  const char *severity_str = "Unknown";
+  switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:         severity_str = "High"; break;
+    case GL_DEBUG_SEVERITY_MEDIUM:       severity_str = "Medium"; break;
+    case GL_DEBUG_SEVERITY_LOW:          severity_str = "Low"; break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION: severity_str = "Notification"; break;
+  }
+
+  // Format full message
+  char buffer[1024];
+  int n = snprintf(buffer, sizeof(buffer),
+    "OpenGL Debug Message\n"
+    "  Source: %s\n"
+    "  Type: %s\n"
+    "  Severity: %s\n"
+    "  ID: %u\n"
+    "  Message: %.*s\n",
+    source_str, type_str, severity_str, id, length, message);
+
+  if (n > 0) {
+    OutputDebugStringA(buffer);
     OutputDebugStringA("\n");
-    if (severity == GL_DEBUG_SEVERITY_HIGH || severity == GL_DEBUG_SEVERITY_MEDIUM)
-    {
-        if (IsDebuggerPresent())
-        {
-            Assert(!"OpenGL error - check the callstack in debugger");
-        }
-        win32_fatal_error("OpenGL API usage error! Use debugger to examine call stack!");
+    if (!IsDebuggerPresent()) {
+      fprintf(stderr, "%s\n", buffer);
     }
+  }
+
+  if (severity == GL_DEBUG_SEVERITY_HIGH || severity == GL_DEBUG_SEVERITY_MEDIUM) {
+    if (IsDebuggerPresent()) {
+      Breakpoint();
+    }
+    win32_fatal_error(buffer);
+  }
 }
 
 // DOC(fz): https://gist.github.com/mmozeiko/ed2ad27f75edf9c26053ce332a1f6647

@@ -1,4 +1,4 @@
-internal GLuint opengl_compile_program(String8 source_path, GLenum shader_stage) {
+internal GLuint opengl_compile_program(String8 source_path, GLenum kind) {
   Arena_Temp scratch = scratch_begin(0, 0);
   GLuint program = 0;
     
@@ -7,15 +7,41 @@ internal GLuint opengl_compile_program(String8 source_path, GLenum shader_stage)
   if (shader_source.data.size == 0) {
     ERROR_MESSAGE_AND_EXIT("Failed to load shader file: %.*s", (s32)source_path.size, source_path.str);
   }
-    
+  
+  const GLchar *src =
+  "#version 460 core\n"
+  "out vec4 Color;\n"
+  "void main() {\n"
+  "  Color = vec4(1.0, 1.0, 1.0, 1.0);\n"
+  "}\n";
+
+  if ( kind == GL_FRAGMENT_SHADER ) {
+    program = glCreateShaderProgramv(kind, 1, &src);
+  } else {
+    program = glCreateShaderProgramv(kind, 1, &shader_source.data.str);
+  }
+
+  GLint linked = 0;
+  glGetProgramiv(program, GL_LINK_STATUS, &linked);
+  if (!linked) {
+    char message[1024];
+    glGetProgramInfoLog(program, sizeof(message), NULL, message);
+    OutputDebugStringA(message);
+
+    const char *stage_str = "Unknown";
+    switch (kind) {
+      case GL_VERTEX_SHADER:   stage_str = "Vertex";   break;
+      case GL_FRAGMENT_SHADER: stage_str = "Fragment"; break;
+      case GL_GEOMETRY_SHADER: stage_str = "Geometry"; break;
+      case GL_COMPUTE_SHADER:  stage_str = "Compute";  break;
+      case GL_TESS_CONTROL_SHADER:    stage_str = "TessControl"; break;
+      case GL_TESS_EVALUATION_SHADER: stage_str = "TessEval";    break;
+    }
+
+    ERROR_MESSAGE_AND_EXIT("Failed to link %s shader", stage_str);
+  }
   scratch_end(&scratch);
   return program;
-}
-
-internal GLuint opengl_create_pipeline(GLuint* programs, u32 count) {
-  GLuint pipeline = 0;
-
-  return pipeline;
 }
 
 internal void opengl_set_uniform_mat4fv(u32 program, const char8* uniform, Mat4f32 mat) {

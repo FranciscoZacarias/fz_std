@@ -8,17 +8,17 @@ typedef struct String8 {
 } String8;
 #define Str8(s) (String8){sizeof(s)-1, (char8*)(s)}
 
-typedef struct String_Node {
-  struct String_Node* next;
+typedef struct String8_Node {
+  struct String8_Node* next;
   String8 value;
-} String_Node;
+} String8_Node;
 
-typedef struct String_List {
-  String_Node* first;
-  String_Node* last;
+typedef struct String8_List {
+  String8_Node* first;
+  String8_Node* last;
   u64 node_count;
   u64 total_size;
-} String_List;
+} String8_List;
 
 internal String8 string8_new(u64 size, char8* str);
 internal String8 string8_format(String8 fmt, ...);
@@ -29,11 +29,14 @@ internal b32     string8_contains(String8 str, String8 substring);
 internal s64     string8_find_first(String8 str, String8 substring);
 internal s64     string8_find_last(String8 str, String8 substring); 
 internal b32     string8_equal(String8 a, String8 b);
+internal void    string8_printf(String8 str);
 
-internal String_List string8_split(Arena* arena, String8 str, String8 split_character);
-internal String8     string8_list_pop(String_List* list);
-internal void        string8_list_clear(String_List* list);
-internal void        string8_list_push(Arena* arena, String_List* list, String8 str);
+internal String8_List string8_split(Arena* arena, String8 str, String8 split_character);
+internal String8_List string8_list_new(Arena* arena, String8 str);
+internal String8      string8_list_pop(String8_List* list);
+internal void         string8_list_clear(String8_List* list);
+internal void         string8_list_push(Arena* arena, String8_List* list, String8 str);
+internal String8      string8_list_join(Arena* arena, String8_List* list);
 
 internal b32 f32_from_string8(String8 str, f32* value);
 internal b32 s32_from_string8(String8 str, s32* value);
@@ -52,6 +55,7 @@ internal wchar_t* wcstr_from_string16(Arena *arena, String16 str16); // TODO(fz)
 
 //~ Char Functions
 internal b32   char8_is_alpha(char8 c);
+internal b32   char8_is_alphanum(char8 c);
 internal b32   char8_is_alpha_upper(char8 c);
 internal b32   char8_is_alpha_lower(char8 c);
 internal b32   char8_is_digit(char8 c);

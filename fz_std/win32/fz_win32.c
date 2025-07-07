@@ -97,7 +97,7 @@ internal File_List file_get_all_files_in_path_recursively(Arena* arena, String8 
     return result;
   }
 
-  String_List dir_queue = {0};
+  String8_List dir_queue = {0};
   string8_list_push(scratch.arena, &dir_queue, path);
 
   while (dir_queue.node_count > 0) {
