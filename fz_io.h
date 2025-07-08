@@ -22,7 +22,7 @@ typedef enum Terminal_Color {
 } Terminal_Color;
 
 void printf_color(Terminal_Color color, const char* fmt, ...) {
-  const char* ansi_colors[] = {
+  local_persist const char* ansi_colors[] = {
     "\x1b[0m",  // Default
     "\x1b[30m", // Black
     "\x1b[31m", // Red
