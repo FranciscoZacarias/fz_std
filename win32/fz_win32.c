@@ -312,7 +312,8 @@ internal void _error_message_and_exit(const char8 *file, int line, const char8 *
     file_write(ErrorLogFile, detailed_buffer, len);
   }
 
-  Breakpoint(); // TODO(fz): This should probably be wrapped around some debug setting?
+  printf(detailed_buffer);
+
   MessageBoxA(0, detailed_buffer, "ERROR: fz_std", MB_OK);
   ExitProcess(1);
 }

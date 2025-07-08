@@ -473,22 +473,24 @@ internal void APIENTRY opengl_debug_callback(GLenum source, GLenum type, GLuint 
     case GL_DEBUG_SEVERITY_NOTIFICATION: severity_str = "Notification"; break;
   }
 
-  // Format full message
   char buffer[1024];
-  int n = snprintf(buffer, sizeof(buffer),
-    "OpenGL Debug Message\n"
-    "  Source: %s\n"
-    "  Type: %s\n"
-    "  Severity: %s\n"
-    "  ID: %u\n"
-    "  Message: %.*s\n",
-    source_str, type_str, severity_str, id, length, message);
-
-  if (n > 0) {
-    OutputDebugStringA(buffer);
-    OutputDebugStringA("\n");
-    if (!IsDebuggerPresent()) {
-      fprintf(stderr, "%s\n", buffer);
+  if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) {
+    // Format full message
+    int n = snprintf(buffer, sizeof(buffer),
+      "OpenGL Debug Message\n"
+      "  Source: %s\n"
+      "  Type: %s\n"
+      "  Severity: %s\n"
+      "  ID: %u\n"
+      "  Message: %.*s\n",
+      source_str, type_str, severity_str, id, length, message);
+    
+    if (n > 0) {
+      OutputDebugStringA(buffer);
+      OutputDebugStringA("\n");
+      if (!IsDebuggerPresent()) {
+        fprintf(stderr, "%s\n", buffer);
+      }
     }
   }
 
@@ -577,5 +579,6 @@ internal b32 win32_enable_opengl() {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   }
 
+  _IsOpenGLContextEnabled = result;
   return result;
 }

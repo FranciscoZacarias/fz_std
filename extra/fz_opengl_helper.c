@@ -8,38 +8,30 @@ internal GLuint opengl_compile_program(String8 source_path, GLenum kind) {
     ERROR_MESSAGE_AND_EXIT("Failed to load shader file: %.*s", (s32)source_path.size, source_path.str);
   }
   
-  const GLchar *src =
-  "#version 460 core\n"
-  "out vec4 Color;\n"
-  "void main() {\n"
-  "  Color = vec4(1.0, 1.0, 1.0, 1.0);\n"
-  "}\n";
+  printf("\n------------\n");
+  println_string(shader_source.data);
+  printf("\n------------\n");
 
-  if ( kind == GL_FRAGMENT_SHADER ) {
-    program = glCreateShaderProgramv(kind, 1, &src);
-  } else {
-    program = glCreateShaderProgramv(kind, 1, &shader_source.data.str);
+  // Create and compile shader
+  
+  // Create separable shader program
+  char8 *null_terminated_source = ArenaPush(scratch.arena, char, shader_source.data.size + 1);
+  MemoryCopy(null_terminated_source, shader_source.data.str, shader_source.data.size);
+  null_terminated_source[shader_source.data.size] = 0;
+
+  program = glCreateShaderProgramv(kind, 1, (const GLchar *const *)&null_terminated_source);
+  //program = glCreateShaderProgramv(kind, 1, (const GLchar**)&shader_source.data.str);
+  glProgramParameteri(program, GL_PROGRAM_SEPARABLE, GL_TRUE);
+  
+  // Check link status
+  GLint success;
+  glGetProgramiv(program, GL_LINK_STATUS, &success);
+  if (!success) {
+    GLchar info_log[1024];
+    glGetProgramInfoLog(program, sizeof(info_log), NULL, info_log);
+    ERROR_MESSAGE_AND_EXIT("Shader link failed for %.*s: %s", (s32)source_path.size, source_path.str, info_log);
   }
-
-  GLint linked = 0;
-  glGetProgramiv(program, GL_LINK_STATUS, &linked);
-  if (!linked) {
-    char message[1024];
-    glGetProgramInfoLog(program, sizeof(message), NULL, message);
-    OutputDebugStringA(message);
-
-    const char *stage_str = "Unknown";
-    switch (kind) {
-      case GL_VERTEX_SHADER:   stage_str = "Vertex";   break;
-      case GL_FRAGMENT_SHADER: stage_str = "Fragment"; break;
-      case GL_GEOMETRY_SHADER: stage_str = "Geometry"; break;
-      case GL_COMPUTE_SHADER:  stage_str = "Compute";  break;
-      case GL_TESS_CONTROL_SHADER:    stage_str = "TessControl"; break;
-      case GL_TESS_EVALUATION_SHADER: stage_str = "TessEval";    break;
-    }
-
-    ERROR_MESSAGE_AND_EXIT("Failed to link %s shader", stage_str);
-  }
+  
   scratch_end(&scratch);
   return program;
 }
