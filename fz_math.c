@@ -13,7 +13,7 @@ internal f32 f32_normalize(f32 value, f32 start, f32 end) {
 }
 
 internal f32 f32_remap(f32 value, f32 inputStart, f32 inputEnd, f32 outputStart, f32 outputEnd) {
-    f32 result = (value - inputStart)/(inputEnd - inputStart)*(outputEnd - outputStart) + outputStart;
+    f32 result = (value - inputStart)/(inputEnd - inputStart)*(outputEnd - outputStart) + outputStart; 
     return result;
 }
 
