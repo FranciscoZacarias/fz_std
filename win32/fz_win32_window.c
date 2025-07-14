@@ -251,31 +251,40 @@ internal void win32_init() {
   win32_timer_start(&_Timer_FrameTime);
 }
 
-internal b32 win32_enable_console() {
+internal b32 win32_enable_console(b32 enable_color) {
+  b32 result = false;
+
   if (GetConsoleWindow() != NULL) {
     // Already attached to a console; no need to allocate a new one.
-    return true;
-  }
-
-  // Try attaching to parent process console.
-  if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+    result = false;
+  } else if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+    // Try attaching to parent process console.
     FILE* fp;
     freopen_s(&fp, "CONOUT$", "w", stdout);
     freopen_s(&fp, "CONOUT$", "w", stderr);
-    _IsTerminalEnabled = true;
-    return true;
-  }
-		
-  // No console attached; allocate a new one.
-  if (AllocConsole()) {
+    result = true;
+  } else if (AllocConsole()) {
+    // No console attached; allocate a new one.
     FILE* fp;
     freopen_s(&fp, "CONOUT$", "w", stdout);
     freopen_s(&fp, "CONOUT$", "w", stderr);
-    _IsTerminalEnabled = true;
-    return true;
+    result = true;
+  }
+  _IsTerminalEnabled = result;
+
+  if (_IsTerminalEnabled && enable_color) {
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (handle != INVALID_HANDLE_VALUE) {
+      DWORD mode = 0;
+      if (GetConsoleMode(handle, &mode)) {
+        if ((mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) == 0) {
+          SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        }
+	  }
+	}
   }
 
-  return false;
+  return result;
 }
 
 internal b32 win32_enable_window(s32 width, s32 height) {
@@ -473,22 +482,24 @@ internal void APIENTRY opengl_debug_callback(GLenum source, GLenum type, GLuint 
     case GL_DEBUG_SEVERITY_NOTIFICATION: severity_str = "Notification"; break;
   }
 
-  // Format full message
   char buffer[1024];
-  int n = snprintf(buffer, sizeof(buffer),
-    "OpenGL Debug Message\n"
-    "  Source: %s\n"
-    "  Type: %s\n"
-    "  Severity: %s\n"
-    "  ID: %u\n"
-    "  Message: %.*s\n",
-    source_str, type_str, severity_str, id, length, message);
-
-  if (n > 0) {
-    OutputDebugStringA(buffer);
-    OutputDebugStringA("\n");
-    if (!IsDebuggerPresent()) {
-      fprintf(stderr, "%s\n", buffer);
+  if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) {
+    // Format full message
+    int n = snprintf(buffer, sizeof(buffer),
+      "OpenGL Debug Message\n"
+      "  Source: %s\n"
+      "  Type: %s\n"
+      "  Severity: %s\n"
+      "  ID: %u\n"
+      "  Message: %.*s\n",
+      source_str, type_str, severity_str, id, length, message);
+    
+    if (n > 0) {
+      OutputDebugStringA(buffer);
+      OutputDebugStringA("\n");
+      if (!IsDebuggerPresent()) {
+        fprintf(stderr, "%s\n", buffer);
+      }
     }
   }
 
@@ -577,5 +588,6 @@ internal b32 win32_enable_opengl() {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   }
 
+  _IsOpenGLContextEnabled = result;
   return result;
 }

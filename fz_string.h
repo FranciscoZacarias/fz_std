@@ -21,13 +21,14 @@ typedef struct String8_List {
 } String8_List;
 
 internal String8 string8_new(u64 size, char8* str);
-internal String8 string8_format(String8 fmt, ...);
+internal String8 string8_format(Arena* arena, String8 fmt, ...);
 internal String8 string8_range(char8* first, char8* range);
 internal String8 string8_concat(Arena* arena, String8 a, String8 b); // TODO(fz): Test this func
+internal String8 string8_slice(String8 str, u64 start, u64 end);
 internal String8 string8_trim(String8 str);
 internal b32     string8_contains(String8 str, String8 substring);
-internal s64     string8_find_first(String8 str, String8 substring);
-internal s64     string8_find_last(String8 str, String8 substring); 
+internal b32     string8_find_first(String8 str, String8 substring, u64* index);
+internal b32     string8_find_last(String8 str, String8 substring, u64* index); 
 internal b32     string8_equal(String8 a, String8 b);
 internal void    string8_printf(String8 str);
 
@@ -38,9 +39,10 @@ internal void         string8_list_clear(String8_List* list);
 internal void         string8_list_push(Arena* arena, String8_List* list, String8 str);
 internal String8      string8_list_join(Arena* arena, String8_List* list);
 
-internal b32 f32_from_string8(String8 str, f32* value);
-internal b32 s32_from_string8(String8 str, s32* value);
-internal b32 b32_from_string8(String8 str, b32* value);
+internal b32    f32_from_string8(String8 str, f32* value);
+internal b32    s32_from_string8(String8 str, s32* value);
+internal b32    b32_from_string8(String8 str, b32* value);
+internal char8* cstring_from_string8(Arena* arena, String8 str);
 
 // 16 Bit strings
 typedef struct String16 {

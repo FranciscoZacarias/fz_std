@@ -3,9 +3,26 @@ internal String8 string8_new(u64 size, char8* str) {
   return result;
 }
 
-internal String8 string8_format(String8 fmt, ...) {
-  // TODO(fz): Implement
-  return fmt;
+internal String8 string8_format(Arena* arena, String8 fmt, ...) {
+  char8* c_fmt = cstring_from_string8(arena, fmt);
+
+  va_list args;
+  va_start(args, fmt);
+
+  s32 required = vsnprintf(0, 0, c_fmt, args);
+  va_end(args);
+
+  if (required <= 0) {
+    return (String8){0};
+  }
+
+  char8* buffer = ArenaPush(arena, char8, required + 1);
+
+  va_start(args, fmt);
+  vsnprintf(buffer, required + 1, c_fmt, args);
+  va_end(args);
+
+  return string8_new((u64)required, buffer);
 }
 
 internal String8 string8_range(char8* first, char8* range) {
@@ -19,6 +36,7 @@ internal String8 string8_concat(Arena* arena, String8 a, String8 b) {
   result.str = ArenaPush(arena, char8, result.size);
   MemoryCopy(result.str, a.str, a.size);
   MemoryCopy(result.str + a.size, b.str, b.size);
+  return result;
 }
 
 internal b32 string8_equal(String8 a, String8 b) {
@@ -27,6 +45,27 @@ internal b32 string8_equal(String8 a, String8 b) {
     if (a.str[i] != b.str[i])  return false;
   }
   return true;
+}
+
+internal String8 string8_slice(String8 str, u64 start, u64 end) {
+  if (start > str.size) start = str.size;
+  if (end > str.size)   end   = str.size;
+  if (start > end)      start = end;
+  return (String8){ .size = end - start, .str  = str.str + start };
+}
+
+internal b32 string8_find_last(String8 str, String8 substring, u64* index) {
+  if (substring.size > str.size) return 0;
+  b32 result = false;
+  *index = U64_MAX;
+  for (u64 i = str.size - substring.size + 1; i-- > 0;) {
+    if (MemoryMatch(&str.str[i], substring.str, substring.size)) {
+      *index = i;
+      result = true;
+      break;
+    }
+  }
+  return result;
 }
 
 internal void string8_printf(String8 str) {
@@ -161,6 +200,13 @@ internal b32 s32_from_string8(String8 str, s32* value) {
     }
   }
   return 1;
+}
+
+internal char8* cstring_from_string8(Arena* arena, String8 str) {
+  char8* result = ArenaPush(arena, char8, str.size + 1);
+  MemoryCopy(result, str.str, str.size);
+  result[str.size] = 0;
+  return result;
 }
 
 internal String16 string16_from_string8(Arena *arena, String8 str8) {

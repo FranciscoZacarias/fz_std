@@ -63,7 +63,7 @@ internal void entry_point(); // DOC(fz): Application layer must implement this f
 
 // Window
 internal void win32_init();
-internal b32  win32_enable_console();
+internal b32  win32_enable_console(b32 enable_color);
 internal b32  win32_enable_window(s32 width, s32 height);
 internal b32  win32_enable_opengl();
 internal void win32_get_webgl_functions(); 

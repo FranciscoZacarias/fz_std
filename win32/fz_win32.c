@@ -49,7 +49,7 @@ internal HANDLE _win32_get_file_handle_write(String8 file_path) {
 }
 
 internal b32 file_create(String8 file_path) {
-  b32 result  = 0;
+  b32 result = 0;
   if (file_exists(file_path)) {
     return result;
   }
@@ -204,32 +204,79 @@ internal b32 path_is_directory(String8 path) {
 
 internal b32 file_exists(String8 file_path) {
   b32 result = 0;
-  DWORD file_attributes = GetFileAttributesA(file_path.str);
+  Arena_Temp scratch = scratch_begin(0,0);
+  char8* cpath = cstring_from_string8(scratch.arena, file_path);
+  DWORD file_attributes = GetFileAttributesA(cpath);
   if (file_attributes == INVALID_FILE_ATTRIBUTES) {
-    printf("File %s attributes are invalid.\n", file_path.str);
+    printf("File %s attributes are invalid.\n", cpath);
   } else if (file_attributes & FILE_ATTRIBUTE_DIRECTORY) {
-    printf("Path %s is a directory.\n", file_path.str);
+    printf("Path %s is a directory.\n", cpath);
   } else {
     result = true;
   }
+  scratch_end(&scratch);
   return result;
 }
 
 
-// TODO(fz): This should either append or overrite. Or maybe a separate file_append function
-internal u32 file_write(String8 file_path, u8* data, u64 data_size) {
+internal u32 file_overwrite(String8 file_path, char8* data, u64 data_size) {
   s32 bytes_written = 0;
   if (!file_exists(file_path)) {
     file_create(file_path);
+  } else {
+    file_wipe(file_path);
   }
-
+  
   HANDLE file_handle = _win32_get_file_handle_write(file_path);
-
-  if (!WriteFile(file_handle, data, data_size, &bytes_written, NULL)) {
-    printf("WriteFile failed (error %d)\n", GetLastError());
+  if (file_handle == INVALID_HANDLE_VALUE) {
+    return 0;
   }
-
+  
+  if (!WriteFile(file_handle, data, data_size, &bytes_written, NULL)) {
+    CloseHandle(file_handle);
+    return 0;
+  }
+  
+  CloseHandle(file_handle);
   return bytes_written;
+}
+
+internal u32 file_append(Arena* arena, String8 file_path, char8* data, u64 data_size) {
+  if (!file_exists(file_path)) {
+    return file_overwrite(file_path, data, data_size);
+  }
+  
+  File_Data existing = file_load(arena, file_path);
+  if (existing.data.str == NULL) {
+    return 0;
+  }
+  
+  u64 new_size = existing.data.size + data_size;
+  char8* combined_data = ArenaPush(arena, char8, new_size);
+  
+  MemoryCopy(combined_data, existing.data.str, existing.data.size);
+  MemoryCopy(combined_data + existing.data.size, data, data_size);
+  
+  return file_overwrite(file_path, combined_data, new_size);
+}
+
+internal b32 file_wipe(String8 file_path) {
+  if (!file_exists(file_path)) {
+    return true;
+  }
+  
+  HANDLE file_handle = _win32_get_file_handle_write(file_path);
+  if (file_handle == INVALID_HANDLE_VALUE) {
+    return false;
+  }
+  
+  if (!SetEndOfFile(file_handle)) {
+    CloseHandle(file_handle);
+    return false;
+  }
+  
+  CloseHandle(file_handle);
+  return true;
 }
 
 internal u32 file_size(String8 file_path) {
@@ -309,10 +356,13 @@ internal void _error_message_and_exit(const char8 *file, int line, const char8 *
   s32 len = snprintf(detailed_buffer, sizeof(detailed_buffer), "Error at %s:%d in %s\n%s", file, line, func, buffer);
   
   if (ErrorLogFile.size > 0) {
-    file_write(ErrorLogFile, detailed_buffer, len);
+    Arena_Temp scratch = scratch_begin(0,0);
+    file_append(scratch.arena, ErrorLogFile, detailed_buffer, len);
+    scratch_end(&scratch);
   }
 
-  Breakpoint(); // TODO(fz): This should probably be wrapped around some debug setting?
+  printf(detailed_buffer);
+
   MessageBoxA(0, detailed_buffer, "ERROR: fz_std", MB_OK);
   ExitProcess(1);
 }

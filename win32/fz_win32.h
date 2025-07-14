@@ -66,9 +66,11 @@ typedef struct File_List {
 
 internal void      file_list_push(Arena* arena, File_List* list, File_Data file);
 
-internal b32       file_create(String8 file_path);
-internal b32       file_exists(String8 file_path);
-internal u32       file_write(String8 file_path, u8* data, u64 data_size);
+internal b32       file_create(String8 file_path); /* Creates file. If file exists, returns true anyway. */
+internal b32       file_exists(String8 file_path); /* Returns true if file exists */
+internal u32       file_overwrite(String8 file_path, char8* data, u64 data_size);
+internal u32       file_append(Arena* arena, String8 file_path, char8* data, u64 data_size);
+internal b32       file_wipe(String8 file_path);
 internal u32       file_size(String8 file_path);
 internal File_Data file_load(Arena* arena, String8 file_path);
 internal b32       file_has_extension(String8 filename, String8 ext);
