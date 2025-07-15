@@ -209,6 +209,11 @@ internal char8* cstring_from_string8(Arena* arena, String8 str) {
   return result;
 }
 
+internal String8 string8_from_cstring(char8* cstring) {
+  String8 result = string8_new((u64)strlen(cstring), cstring);
+  return result;
+}
+
 internal String16 string16_from_string8(Arena *arena, String8 str8) {
   String16 result = {0};
   s32 str16_length = MultiByteToWideChar(CP_UTF8, 0, str8.str, (s32)str8.size, NULL, 0);

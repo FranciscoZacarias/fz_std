@@ -56,10 +56,23 @@ global b32 _IsCursorLocked      = false;
 //~ APPLICATION SPACE 
 //~ Doc(fz): User can access directly anything declared here. Variables, functions...
 
+#define MAX_COMMAND_LINE_ARGS 16
+
+typedef struct Command_Arg {
+  String8 name;   // Includes the `--` prefix (e.g. "--title")
+  String8 value;  // Always present ("" if no value given)
+} Command_Arg;
+
+typedef struct Command_Line {
+  String8 executable;
+  String8 args;
+} Command_Line;
+
 global b32 IsApplicationRunning = true;
 global s32 WindowWidth  = 0.0f;
 global s32 WindowHeight = 0.0f;
-internal void entry_point(); // DOC(fz): Application layer must implement this function as it's entry point.
+internal void entry_point(Command_Line command_line); // DOC(fz): Application layer must implement this function as it's entry point.
+internal Command_Line command_line_parse(LPSTR lpCmdLine);
 
 // Window
 internal void win32_init();

@@ -76,8 +76,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
   _hInstance = hInstance;
   thread_context_init_and_attach(&MainThreadContext);
-  entry_point();
+  Command_Line cmd_line = command_line_parse(lpCmdLine);
+  entry_point(cmd_line);
   return _ApplicationReturn;
+}
+
+#define MAX_CMD_ARGS 64
+
+internal Command_Line command_line_parse(LPSTR lpCmdLine) {
+  Command_Line result = {0};
+
+  static char8 exe_buffer[MAX_PATH];
+  DWORD exe_len = GetModuleFileNameA(0, exe_buffer, MAX_PATH);
+  result.executable = (String8){ exe_len, exe_buffer };
+
+  u64 args_len = 0;
+  for (char8* c = lpCmdLine; *c; c++) args_len++;
+  result.args = (String8){ args_len, (char8*)lpCmdLine };
+
+  return result;
 }
 
 internal void _win32_window_resize_callback(s32 width, s32 height) {

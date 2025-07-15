@@ -39,10 +39,11 @@ internal void         string8_list_clear(String8_List* list);
 internal void         string8_list_push(Arena* arena, String8_List* list, String8 str);
 internal String8      string8_list_join(Arena* arena, String8_List* list);
 
-internal b32    f32_from_string8(String8 str, f32* value);
-internal b32    s32_from_string8(String8 str, s32* value);
-internal b32    b32_from_string8(String8 str, b32* value);
-internal char8* cstring_from_string8(Arena* arena, String8 str);
+internal b32     f32_from_string8(String8 str, f32* value);
+internal b32     s32_from_string8(String8 str, s32* value);
+internal b32     b32_from_string8(String8 str, b32* value);
+internal char8*  cstring_from_string8(Arena* arena, String8 str);
+internal String8 string8_from_cstring(char8* cstring);
 
 // 16 Bit strings
 typedef struct String16 {
