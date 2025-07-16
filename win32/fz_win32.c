@@ -202,6 +202,15 @@ internal b32 path_is_directory(String8 path) {
   return result;;
 }
 
+internal String8 get_present_working_directory(void) {
+  static char8 buffer[MAX_PATH];
+  DWORD len = GetCurrentDirectoryA(MAX_PATH, buffer);
+  if (len == 0 || len >= MAX_PATH) {
+    return (String8){0};
+  }
+  return (String8){ .size = len, .str = buffer };
+}
+
 internal b32 file_exists(String8 file_path) {
   b32 result = 0;
   Arena_Temp scratch = scratch_begin(0,0);

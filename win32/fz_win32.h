@@ -78,6 +78,7 @@ internal u64       file_get_last_modified_time(String8 file_path);
 internal File_List file_get_all_files_in_path_recursively(Arena* arena, String8 path, u32 flags);
 
 internal b32 path_is_directory(String8 path);
+internal String8 get_present_working_directory();
 
 ///////////////////////
 //~ Logging 

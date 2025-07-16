@@ -2,9 +2,10 @@
 #define FZ_INCLUDES_H
 
 //~ CLib
+// TODO(fz): We want to replace these
 #include <stdlib.h>
 #include <string.h>
-#include <math.h> // TODO(fz): Replace/Implement these functions -> sinf(), cosf(), tan(), atan2f(), sqrtf(), fmaxf(), fabsf()
+#include <math.h>
 
 //~ Extern
 #define STB_SPRINTF_STATIC
@@ -26,6 +27,7 @@
 #include "fz_memory.h"
 #include "fz_string.h"
 #include "fz_thread_context.h"
+#include "fz_command_line.h"
 
 //~ Opengl specific headers
 #include "glad/glad.h"
@@ -38,12 +40,12 @@
 #include "fz_win32.h"
 #include "fz_win32_window.h"
 
-
 //~ Source
 #include "fz_math.c"
 #include "fz_memory.c"
 #include "fz_string.c"
 #include "fz_thread_context.c"
+#include "fz_command_line.c"
 
 //~ Opengl specific implementation
 #include "extra/fz_opengl_helper.c"
