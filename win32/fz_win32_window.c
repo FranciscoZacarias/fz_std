@@ -82,7 +82,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 }
 
 #define MAX_CMD_ARGS 64
-
 internal Command_Line command_line_parse(LPSTR lpCmdLine) {
   Command_Line result = {0};
 
