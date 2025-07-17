@@ -87,7 +87,7 @@ internal u64 file_get_last_modified_time(String8 file_path) {
 
 internal b32 file_has_extension(String8 filename, String8 ext) {
   if (filename.size < ext.size + 1)  return false;
-  if (filename.str[filename.size - ext.size - 1] != '.')  return false;
+  if (filename.str[filename.size - ext.size] != '.')  return false;
   for (u64 i = 0; i < ext.size; i++) {
     if (tolower(filename.str[filename.size - ext.size + i]) != tolower(ext.str[i])) {
       return false;
