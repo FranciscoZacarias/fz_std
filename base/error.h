@@ -1,17 +1,20 @@
 #ifndef ERROR_H
 #define ERROR_H
 
+#define MAX_ERROR_NODES 128
+typedef struct Log_Entry Log_Entry;
+typedef struct Log_Entry_Node Log_Entry_Node;
+typedef struct Log_Context Log_Context;
+
 typedef enum
 {
   Log_Level_Info = 0,
   Log_Level_Warning,
   Log_Level_Error,
   Log_Level_Fatal,
-
   Log_Level_Count
 } Log_Level;
 
-typedef struct Log_Entry Log_Entry;
 struct Log_Entry
 {
   Log_Level level;
@@ -22,15 +25,12 @@ struct Log_Entry
   OS_Date_Time timestamp;
 };
 
-#define MAX_ERROR_NODES 128
-typedef struct Log_Entry_Node Log_Entry_Node;
 struct Log_Entry_Node
 {
   Log_Entry_Node* next;
   Log_Entry value;
 };
 
-typedef struct Log_Context Log_Context;
 struct Log_Context
 {
   Arena* arena;

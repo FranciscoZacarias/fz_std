@@ -192,6 +192,7 @@ typedef s32 GLintptr;
 #define GL_PROGRAM_BINARY_LENGTH          0x8741
 #define GL_NUM_PROGRAM_BINARY_FORMATS     0x87FE
 #define GL_PROGRAM_BINARY_FORMATS         0x87FF
+#define GL_MAX_TEXTURE_IMAGE_UNITS        0x8872
 #define GL_VERTEX_SHADER_BIT              0x00000001
 #define GL_FRAGMENT_SHADER_BIT            0x00000002
 #define GL_GEOMETRY_SHADER_BIT            0x00000004
@@ -382,3 +383,24 @@ typedef s32 GLintptr;
 #define GL_TEXTURE_WRAP_S                 0x2802
 #define GL_TEXTURE_WRAP_T                 0x2803
 #define GL_REPEAT                         0x2901
+
+// 4.4
+#define GL_MAX_VERTEX_ATTRIB_STRIDE       0x82E5
+#define GL_PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED 0x8221
+#define GL_TEXTURE_BUFFER_BINDING         0x8C2A
+#define GL_MAP_PERSISTENT_BIT             0x0040
+#define GL_MAP_COHERENT_BIT               0x0080
+#define GL_DYNAMIC_STORAGE_BIT            0x0100
+#define GL_CLIENT_STORAGE_BIT             0x0200
+#define GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT 0x00004000
+#define GL_BUFFER_IMMUTABLE_STORAGE       0x821F
+#define GL_BUFFER_STORAGE_FLAGS           0x8220
+#define GL_CLEAR_TEXTURE                  0x9365
+#define GL_LOCATION_COMPONENT             0x934A
+#define GL_TRANSFORM_FEEDBACK_BUFFER_INDEX 0x934B
+#define GL_TRANSFORM_FEEDBACK_BUFFER_STRIDE 0x934C
+#define GL_QUERY_BUFFER                   0x9192
+#define GL_QUERY_BUFFER_BARRIER_BIT       0x00008000
+#define GL_QUERY_BUFFER_BINDING           0x9193
+#define GL_QUERY_RESULT_NO_WAIT           0x9194
+#define GL_MIRROR_CLAMP_TO_EDGE           0x8743

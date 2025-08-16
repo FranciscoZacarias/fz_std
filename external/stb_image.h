@@ -434,7 +434,7 @@ STBIDEF stbi_uc *stbi_load_gif_from_memory(stbi_uc const *buffer, int len, int *
 #endif
 
 #ifdef STBI_WINDOWS_UTF8
-STBIDEF int stbi_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* input);
+STBIDEF int stbi_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* g_input);
 #endif
 
 ////////////////////////////////////
@@ -1328,9 +1328,9 @@ STBI_EXTERN __declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int
 #endif
 
 #if defined(_WIN32) && defined(STBI_WINDOWS_UTF8)
-STBIDEF int stbi_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* input)
+STBIDEF int stbi_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* g_input)
 {
-	return WideCharToMultiByte(65001 /* UTF8 */, 0, input, -1, buffer, (int) bufferlen, NULL, NULL);
+	return WideCharToMultiByte(65001 /* UTF8 */, 0, g_input, -1, buffer, (int) bufferlen, NULL, NULL);
 }
 #endif
 
@@ -3476,23 +3476,23 @@ static stbi_uc*  stbi__resample_row_h_2(stbi_uc *out, stbi_uc *in_near, stbi_uc 
 {
    // need to generate two samples horizontally for every one in input
    int i;
-   stbi_uc *input = in_near;
+   stbi_uc *g_input = in_near;
 
    if (w == 1) {
       // if only one sample, can't do any interpolation
-      out[0] = out[1] = input[0];
+      out[0] = out[1] = g_input[0];
       return out;
    }
 
-   out[0] = input[0];
-   out[1] = stbi__div4(input[0]*3 + input[1] + 2);
+   out[0] = g_input[0];
+   out[1] = stbi__div4(g_input[0]*3 + g_input[1] + 2);
    for (i=1; i < w-1; ++i) {
-      int n = 3*input[i]+2;
-      out[i*2+0] = stbi__div4(n+input[i-1]);
-      out[i*2+1] = stbi__div4(n+input[i+1]);
+      int n = 3*g_input[i]+2;
+      out[i*2+0] = stbi__div4(n+g_input[i-1]);
+      out[i*2+1] = stbi__div4(n+g_input[i+1]);
    }
-   out[i*2+0] = stbi__div4(input[w-2]*3 + input[w-1] + 2);
-   out[i*2+1] = input[w-1];
+   out[i*2+0] = stbi__div4(g_input[w-2]*3 + g_input[w-1] + 2);
+   out[i*2+1] = g_input[w-1];
 
    STBI_NOTUSED(in_far);
    STBI_NOTUSED(hs);
@@ -5381,11 +5381,11 @@ static int stbi__high_bit(unsigned int z)
 
 static int stbi__bitcount(unsigned int a)
 {
-   a = (a & 0x55555555) + ((a >>  1) & 0x55555555); // max 2
-   a = (a & 0x33333333) + ((a >>  2) & 0x33333333); // max 4
-   a = (a + (a >> 4)) & 0x0f0f0f0f; // max 8 per 4, now 8 bits
-   a = (a + (a >> 8)); // max 16 per 8 bits
-   a = (a + (a >> 16)); // max 32 per 8 bits
+   a = (a & 0x55555555) + ((a >>  1) & 0x55555555); // Max 2
+   a = (a & 0x33333333) + ((a >>  2) & 0x33333333); // Max 4
+   a = (a + (a >> 4)) & 0x0f0f0f0f; // Max 8 per 4, now 8 bits
+   a = (a + (a >> 8)); // Max 16 per 8 bits
+   a = (a + (a >> 16)); // Max 32 per 8 bits
    return a & 0xff;
 }
 
@@ -5478,7 +5478,7 @@ static void *stbi__bmp_parse_header(stbi__context *s, stbi__bmp_data *info)
       stbi__get32le(s); // discard hres
       stbi__get32le(s); // discard vres
       stbi__get32le(s); // discard colorsused
-      stbi__get32le(s); // discard max important
+      stbi__get32le(s); // discard Max important
       if (hsz == 40 || hsz == 56) {
          if (hsz == 56) {
             stbi__get32le(s);
@@ -5565,8 +5565,8 @@ static void *stbi__bmp_load(stbi__context *s, int *x, int *y, int *comp, int req
       // accept some number of extra bytes after the header, but if the offset points either to before
       // the header ends or implies a large amount of extra data, reject the file as malformed
       int bytes_read_so_far = s->callback_already_read + (int)(s->img_buffer - s->img_buffer_original);
-      int header_limit = 1024; // max we actually read is below 256 bytes currently.
-      int extra_data_limit = 256*4; // what ordinarily goes here is a palette; 256 entries*4 bytes is its max size.
+      int header_limit = 1024; // Max we actually read is below 256 bytes currently.
+      int extra_data_limit = 256*4; // what ordinarily goes here is a palette; 256 entries*4 bytes is its Max size.
       if (bytes_read_so_far <= 0 || bytes_read_so_far > header_limit) {
          return stbi__errpuc("bad header", "Corrupt BMP");
       }
@@ -7128,18 +7128,18 @@ static char *stbi__hdr_gettoken(stbi__context *z, char *buffer)
    return buffer;
 }
 
-static void stbi__hdr_convert(float *output, stbi_uc *input, int req_comp)
+static void stbi__hdr_convert(float *output, stbi_uc *g_input, int req_comp)
 {
-   if ( input[3] != 0 ) {
+   if ( g_input[3] != 0 ) {
       float f1;
       // Exponent
-      f1 = (float) ldexp(1.0f, input[3] - (int)(128 + 8));
+      f1 = (float) ldexp(1.0f, g_input[3] - (int)(128 + 8));
       if (req_comp <= 2)
-         output[0] = (input[0] + input[1] + input[2]) * f1 / 3;
+         output[0] = (g_input[0] + g_input[1] + g_input[2]) * f1 / 3;
       else {
-         output[0] = input[0] * f1;
-         output[1] = input[1] * f1;
-         output[2] = input[2] * f1;
+         output[0] = g_input[0] * f1;
+         output[1] = g_input[1] * f1;
+         output[2] = g_input[2] * f1;
       }
       if (req_comp == 2) output[1] = 1;
       if (req_comp == 4) output[3] = 1;
@@ -7612,9 +7612,9 @@ static int      stbi__pnm_info(stbi__context *s, int *x, int *y, int *comp)
        return stbi__err("invalid width", "PPM image header had zero or overflowing width");
    stbi__pnm_skip_whitespace(s, &c);
 
-   maxv = stbi__pnm_getinteger(s, &c);  // read max value
+   maxv = stbi__pnm_getinteger(s, &c);  // read Max value
    if (maxv > 65535)
-      return stbi__err("max value > 65535", "PPM image supports only 8-bit and 16-bit images");
+      return stbi__err("Max value > 65535", "PPM image supports only 8-bit and 16-bit images");
    else if (maxv > 255)
       return 16;
    else

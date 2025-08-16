@@ -7,8 +7,8 @@ NOTE(fz):
     it's the only one to be used for the program's lifetime.
 */
 
-#ifndef FZ_WINDOW
-# error fz_opengl.h requires including fz_window.h
+#ifndef BASE_H
+# error fz_opengl.h requires including fz_base.h
 #endif
 #define FZ_OPENGL 1
 

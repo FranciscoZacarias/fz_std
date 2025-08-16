@@ -19,8 +19,8 @@ typedef void (*GLDEBUGPROC)(GLenum source, GLenum type, GLuint id, GLenum severi
 
 ///////////////////////////////////////////////////////
 // @Section: Opengl entry point
-function b32  os_opengl_init(); /* Initializes opengl context */
-function void os_opengl_end();  /* Deletes opengl context */
+function b32  os_opengl_init(OS_Window* window); /* Initializes opengl context */
+function void os_opengl_end(OS_Window* window);  /* Deletes opengl context */
 
 ///////////////////////////////////////////////////////
 // @Section: Settings

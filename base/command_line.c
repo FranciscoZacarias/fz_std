@@ -11,13 +11,13 @@ command_line_arg_new(String8 key, String8 value, b32 is_flag)
 }
 
 function void
-command_line_skip_whitespace(u8** cursor)
+_command_line_skip_whitespace(u8** cursor)
 {
   while (char8_is_space(**cursor)) (*cursor)++;
 }
 
 function String8
-command_line_strip_quotes(String8 in)
+_command_line_strip_quotes(String8 in)
 {
   if (in.size >= 2 && in.str[0] == '"' && in.str[in.size - 1] == '"')
   {
@@ -27,7 +27,7 @@ command_line_strip_quotes(String8 in)
 }
 
 function String8
-command_line_strip_leading_dashes(String8 in)
+_command_line_strip_leading_dashes(String8 in)
 {
   u64 offset = 0;
   while (offset < in.size && in.str[offset] == '-')
@@ -38,9 +38,9 @@ command_line_strip_leading_dashes(String8 in)
 }
 
 function String8
-command_line_parse_token(u8** cursor)
+_command_line_parse_token(u8** cursor)
 {
-  command_line_skip_whitespace(cursor);
+  _command_line_skip_whitespace(cursor);
   if (**cursor == 0)
   {
     return (String8){0};
@@ -112,15 +112,15 @@ command_line_parse(String8 input)
 
   while (*cursor && result.args_count < MAX_COMMAND_LINE_ARGS)
   {
-    command_line_skip_whitespace(&cursor);
+    _command_line_skip_whitespace(&cursor);
     if (*cursor == 0) break;
 
-    String8 token = command_line_parse_token(&cursor);
+    String8 token = _command_line_parse_token(&cursor);
     if (token.size == 0) break;
 
     if (token.str[0] == '-')
     {
-      String8 key = command_line_strip_leading_dashes(token);
+      String8 key = _command_line_strip_leading_dashes(token);
 
       // Copy key to stable memory
       String8 key_copy = {
@@ -131,7 +131,7 @@ command_line_parse(String8 input)
       parsed_cursor += key.size;
 
       // Peek for value
-      command_line_skip_whitespace(&cursor);
+      _command_line_skip_whitespace(&cursor);
       if (*cursor == 0 || *cursor == '-')
       {
         // Flag
@@ -139,8 +139,8 @@ command_line_parse(String8 input)
       }
       else
       {
-        String8 val = command_line_parse_token(&cursor);
-        val = command_line_strip_quotes(val);
+        String8 val = _command_line_parse_token(&cursor);
+        val = _command_line_strip_quotes(val);
 
         // Copy value to stable memory
         String8 val_copy = {

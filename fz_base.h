@@ -7,11 +7,8 @@ Must be in every project:
   #include "fz_base.h"
   - This includes the base library as well as the core os module.
   - The base layer should have no dependencies, apart from the core os layer, which obviously requires the underlying OS implementations.
-
-Additional modules 
-  #include "fz_window.h"
-    - Enables window API
-    - Only supports 1 window
+  - Enables window API
+  - Only supports 1 window
   #include "fz_opengl.h"
 
 Macros:
@@ -36,6 +33,7 @@ Macros:
 #include "base\core.h" 
 #include "base\memory.h"
 #include "base\math.h"
+#include "base\art.h"
 #include "base\string.h"
 #include "base\thread_context.h"
 #include "base\command_line.h"
@@ -47,6 +45,7 @@ Macros:
 // @Section: *.c
 #include "base\memory.c"
 #include "base\math.c"
+#include "base\art.c"
 #include "base\string.c"
 #include "base\thread_context.c"
 #include "base\command_line.c"

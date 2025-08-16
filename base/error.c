@@ -53,6 +53,7 @@ log_emit(Log_Level level, String8 message, String8 file, u32 line)
   log_entry_node->value.line      = line;
   log_entry_node->value.timestamp = os_datetime_now();
 
+  String8 final_str;
   if (g_log_context.log_file_path.size > 0)
   {
     String8 level_str = {0};
@@ -66,19 +67,22 @@ log_emit(Log_Level level, String8 message, String8 file, u32 line)
     }
     
     String8 start = string8_from_format(scratch.arena, "%.*s :: ", level_str.size, level_str.str); 
-    String8 mid   = os_datetime_to_string8(scratch.arena, log_entry_node->value.timestamp);
+    String8 mid   = os_datetime_to_string8(scratch.arena, log_entry_node->value.timestamp, true);
     String8 end   = string8_from_format(scratch.arena, " :: %.*s:%u: %.*s\n", (s32)file.size, file.str, line, (s32)message.size, message.str);
     
     String8 a = string8_concat(scratch.arena, start, mid);
-    String8 b = string8_concat(scratch.arena, a, end);
+    final_str = string8_concat(scratch.arena, a, end);
 
-    os_file_append(g_log_context.log_file_path, b.str, b.size);
-    os_console_write(b);
+    os_file_append(g_log_context.log_file_path, final_str.str, final_str.size);
+    os_console_write(final_str);
   }
-  scratch_end(&scratch);
+
   if (level == Log_Level_Fatal)
   {
+    os_message_box(S("Fatal Error!"), final_str);
     Breakpoint();
     os_exit_process(1);
   }
+
+  scratch_end(&scratch);
 }

@@ -26,7 +26,7 @@ thread_context_get_equipped()
 }
 
 function Arena*
-thread_context_get_scratch(Arena** conflicts, u64 count)
+_thread_context_get_scratch(Arena** conflicts, u64 count)
 {
   Thread_Context *thread_context = thread_context_get_equipped();
   

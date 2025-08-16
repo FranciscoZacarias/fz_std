@@ -90,7 +90,7 @@ string8_find_last(String8 str, String8 substring, u64* index)
 }
 
 function void
-string8_printf(String8 str)
+print(String8 str)
 {
   printf("%.*s", (s32)str.size, str.str);
 }

@@ -3,6 +3,8 @@
 function void APIENTRY
 _os_opengl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *user)
 {
+  Scratch scratch = scratch_begin(0,0);
+
   // Decode source
   const char *source_str = "Unknown";
   switch (source)
@@ -40,22 +42,26 @@ _os_opengl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity
     case GL_DEBUG_SEVERITY_NOTIFICATION: severity_str = "Notification"; break;
   }
 
+  u8 buffer[4096];
   if (severity != GL_DEBUG_SEVERITY_NOTIFICATION)
   {
-    fprintf(stderr,
+    sprintf(buffer,
       "OpenGL Debug Message\n"
       "  Source: %s\n"
       "  Type: %s\n"
       "  Severity: %s\n"
       "  ID: %u\n"
-      "  Message: %.*s\n\n",
+      "  Message: %.*s",
       source_str, type_str, severity_str, id, length, message);
   }
 
   if (severity == GL_DEBUG_SEVERITY_HIGH || severity == GL_DEBUG_SEVERITY_MEDIUM)
   {
-    printf("OpenGL Debug Triggered (Severity: %s, Type: %s, Source: %s)\n", severity_str, type_str, source_str);
+    String8 error = string8_from_format(scratch.arena, "OpenGL Debug Triggered (Severity: %s, Type: %s, Source: %s)\n%s\n", severity_str, type_str, source_str, buffer);
+    emit_error(error);
   }
+
+  scratch_end(&scratch);
 }
 
 function void*

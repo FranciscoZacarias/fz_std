@@ -43,15 +43,15 @@ arena_alloc_sized(u64 reserve, u64 commit)
 }
 
 function void*
-_arena_push(Arena* arena, u64 size)
+ arena_push(Arena* arena, u64 size)
 {
-  void* result = _arena_push_no_zero(arena, size);
+  void* result =  arena_push_no_zero(arena, size);
   MemoryZero(result, size);
   return result;
 }
 
 function void*
-_arena_push_no_zero(Arena* arena, u64 size)
+ arena_push_no_zero(Arena* arena, u64 size)
 {
   void* result = NULL;
 
@@ -115,7 +115,7 @@ arena_pop_to(Arena* arena, u64 pos)
 function void
 arena_clear(Arena* arena)
 {
-  arena_pop(arena, arena->position);
+  arena_pop_to(arena, 0);
 }
 
 function void
