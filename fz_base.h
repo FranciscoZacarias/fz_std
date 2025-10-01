@@ -45,7 +45,6 @@ Macros:
 // @Section: *.c
 #include "base\memory.c"
 #include "base\math.c"
-#include "base\art.c"
 #include "base\string.c"
 #include "base\thread_context.c"
 #include "base\command_line.c"

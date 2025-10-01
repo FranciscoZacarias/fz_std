@@ -110,7 +110,7 @@ os_console_init()
 function void
 os_console_write(String8 string)
 {
-  printf("%.*s", (s32)string.size, string.str);
+  printf(S_FMT, (s32)string.size, string.str);
 }
 
 function void
@@ -576,12 +576,12 @@ os_datetime_to_string8(Arena *arena, OS_Date_Time dt, b32 include_ms)
   String8 result;
   if (include_ms)
   {
-    result = string8_from_format(arena, "%04u-%.*s-%02u %02u:%02u:%02u.%03u",
+    result = string8_from_format(arena, "%04u-" S_FMT "-%02u %02u:%02u:%02u.%03u",
       dt.year, month_name.size, month_name.str, dt.day,dt.hour, dt.minute, dt.second, dt.millisecond);
   }
   else
   {
-    result = string8_from_format(arena, "%04u-%.*s-%02u %02u:%02u:%02u",
+    result = string8_from_format(arena, "%04u-" S_FMT "-%02u %02u:%02u:%02u",
       dt.year, month_name.size, month_name.str, dt.day,dt.hour, dt.minute, dt.second);
   }
   
@@ -631,48 +631,44 @@ os_timer_reset(OS_Timer *timer)
 
 ///////////////////////////////////////////////////////
 // @Section: Cursor
-function void
-os_cursor_set(Cursor_Type cursor)
+
+function Vec2s32
+os_cursor_window_get()
+{
+  Vec2s32 result;
+  POINT point;
+  GetCursorPos(&point);
+  ScreenToClient(g_os_window.window_handle, &point);
+  result.x = point.x;
+  result.y = point.y;
+  return result;
+}
+
+void os_cursor_set(Cursor_Type cursor)
 {
   HCURSOR hCursor = NULL;
 
+  _g_current_cursor = cursor;
+
   switch (cursor)
   {
-    case CURSOR_ARROW:
-    {
-      hCursor = LoadCursor(NULL, IDC_ARROW);
-    }
-    break;
-    case CURSOR_HAND:
-    {
-      hCursor = LoadCursor(NULL, IDC_HAND);
-    }
-    break;
-    case CURSOR_CROSSHAIR:
-    {
-      hCursor = LoadCursor(NULL, IDC_CROSS);
-    }
-    break;
-    case CURSOR_IBEAM:
-    {
-      hCursor = LoadCursor(NULL, IDC_IBEAM);
-    }
-    break;
-    case CURSOR_WAIT:
-    { 
-      hCursor = LoadCursor(NULL, IDC_WAIT);
-    }
-    break;
-    case CURSOR_SIZE_ALL:
-    {
-      hCursor = LoadCursor(NULL, IDC_SIZEALL);
-    }
-    break;
-    default:
-    {
-      hCursor = LoadCursor(NULL, IDC_ARROW);
-    }
-    break;
+    case Cursor_Arrow:        hCursor = LoadCursor(NULL, IDC_ARROW); break;
+    case Cursor_Ibeam:        hCursor = LoadCursor(NULL, IDC_IBEAM); break;
+    case Cursor_Wait:         hCursor = LoadCursor(NULL, IDC_WAIT); break;
+    case Cursor_Crosshair:    hCursor = LoadCursor(NULL, IDC_CROSS); break;
+    case Cursor_UpArrow:      hCursor = LoadCursor(NULL, IDC_UPARROW); break;
+    case Cursor_SizeNWSE:     hCursor = LoadCursor(NULL, IDC_SIZENWSE); break;
+    case Cursor_SizeNESW:     hCursor = LoadCursor(NULL, IDC_SIZENESW); break;
+    case Cursor_SizeWE:       hCursor = LoadCursor(NULL, IDC_SIZEWE); break;
+    case Cursor_SizeNS:       hCursor = LoadCursor(NULL, IDC_SIZENS); break;
+    case Cursor_SizeALL:      hCursor = LoadCursor(NULL, IDC_SIZEALL); break;
+    case Cursor_No:           hCursor = LoadCursor(NULL, IDC_NO); break;
+    case Cursor_Hand:         hCursor = LoadCursor(NULL, IDC_HAND); break;
+    case Cursor_AppStarting:  hCursor = LoadCursor(NULL, IDC_APPSTARTING); break;
+    case Cursor_Help:         hCursor = LoadCursor(NULL, IDC_HELP); break;
+    case Cursor_Pin:          hCursor = LoadCursor(NULL, IDC_PIN); break;
+    case Cursor_Person:       hCursor = LoadCursor(NULL, IDC_PERSON); break;
+    default:                  hCursor = LoadCursor(NULL, IDC_ARROW); break;
   }
 
   if (hCursor)
@@ -681,6 +677,7 @@ os_cursor_set(Cursor_Type cursor)
   }
 }
 
+
 function void
 os_cursor_set_position(s32 x, s32 y)
 {
@@ -688,14 +685,14 @@ os_cursor_set_position(s32 x, s32 y)
 }
 
 function void
-os_cursor_lock(OS_Window* window, Input_State* input, b32 lock)
+os_cursor_lock(Input_State* input, b32 lock)
 {
   if (lock)
   {
     RECT rect;
-    GetClientRect(window->window_handle, &rect);
+    GetClientRect(g_os_window.window_handle, &rect);
     POINT center = {(rect.right - rect.left) / 2, (rect.bottom - rect.top) / 2};
-    ClientToScreen(window->window_handle, &center);
+    ClientToScreen(g_os_window.window_handle, &center);
     SetCursorPos(center.x, center.y);
 
     input->_g_ignore_next_mouse_move = true;
@@ -748,58 +745,58 @@ _os_key_from_native_key(u32 native_key)
 ///////////////////////////////////////////////////////
 // @Section: Window Lifecycle
 function b32
-os_window_init(s32 width, s32 height, String8 title, OS_Window* out_window, Input_State* out_input)
+os_window_init(s32 width, s32 height, String8 title, Input_State* out_input)
 {
-  MemoryZeroStruct(out_window);
+  MemoryZeroStruct(&g_os_window);
   b32 result = true;
 
-  out_window->window_handle = _win32_window_create(_g_hInstance, width, height, title);
-  if (!IsWindow(out_window->window_handle))
+  g_os_window.window_handle = _win32_window_create(_g_hInstance, width, height, title);
+  if (!IsWindow(g_os_window.window_handle))
   {
     win32_check_error();
     emit_error(S("Failed to get window handle\n"));
   }
 
   // Store a pointer to the input in the window, such that it is updated every message
-  SetWindowLongPtr(out_window->window_handle, GWLP_USERDATA, (LONG_PTR)out_input);
+  SetWindowLongPtr(g_os_window.window_handle, GWLP_USERDATA, (LONG_PTR)out_input);
   
-  out_window->device_context = GetDC(out_window->window_handle);
-  if (!out_window->device_context)
+  g_os_window.device_context = GetDC(g_os_window.window_handle);
+  if (!g_os_window.device_context)
   {
     win32_check_error();
     emit_error(S("Failed to get device context"));
   }
 
-  out_window->dimensions = (Vec2s32){width, height};
-  out_window->title      = S("FZ_Window_Title");
+  g_os_window.dimensions = (Vec2s32){width, height};
+  g_os_window.title      = S("FZ_Window_Title");
 
-  _input_init(out_window, out_input);
+  _input_init(out_input);
   g_os_resize_callback = _win32_window_resize_callback;
 
   return result;
 }
 
 function void
-os_window_open(OS_Window* window)
+os_window_open()
 {
-  ShowWindow(window->window_handle, SW_SHOW);
-  UpdateWindow(window->window_handle);
+  ShowWindow(g_os_window.window_handle, SW_SHOW);
+  UpdateWindow(g_os_window.window_handle);
 }
 
 function void     
-os_window_close(OS_Window* window)
+os_window_close()
 {
-  ShowWindow(window->window_handle, SW_HIDE);
-  UpdateWindow(window->window_handle);
+  ShowWindow(g_os_window.window_handle, SW_HIDE);
+  UpdateWindow(g_os_window.window_handle);
 }
 
 function b32
-os_is_application_running(OS_Window* window, Input_State* input)
+os_is_application_running(Input_State* input)
 {
   b32 result = true;
 
   MSG msg = {0};
-  if (window->window_handle != NULL)
+  if (g_os_window.window_handle != NULL)
   {
     _input_update(input);
 
@@ -817,20 +814,26 @@ os_is_application_running(OS_Window* window, Input_State* input)
   return result;
 }
 
+function OS_Window
+os_window_get()
+{
+  return g_os_window;
+}
+
 function Vec2s32
-os_window_get_client_dimensions(OS_Window* window)
+os_window_get_client_dimensions()
 {
   RECT rect;
-  GetClientRect(window->window_handle, &rect);
+  GetClientRect(g_os_window.window_handle, &rect);
   Vec2s32 result = vec2s32((rect.right - rect.left), (rect.bottom - rect.top));
   return result;
 }
 
 function Vec2s32
-os_window_client_to_screen(OS_Window* window, Vec2s32 client_point)
+os_window_client_to_screen(Vec2s32 client_point)
 {
   POINT point = { client_point.x, client_point.y };
-  ClientToScreen(window->window_handle, &point);
+  ClientToScreen(g_os_window.window_handle, &point);
   Vec2s32 result = vec2s32(point.x, point.y);
   return result;
 }
@@ -839,13 +842,13 @@ os_window_client_to_screen(OS_Window* window, Vec2s32 client_point)
 // @Section: Window Flags
 
 function b32
-os_window_is_fullscreen(OS_Window* window)
+os_window_is_fullscreen()
 {
   RECT rect;
-  GetWindowRect(window->window_handle, &rect);
+  GetWindowRect(g_os_window.window_handle, &rect);
 
   MONITORINFO mi = { sizeof(mi) };
-  GetMonitorInfo(MonitorFromWindow(window->window_handle, MONITOR_DEFAULTTONEAREST), &mi);
+  GetMonitorInfo(MonitorFromWindow(g_os_window.window_handle, MONITOR_DEFAULTTONEAREST), &mi);
 
   b32 result = (rect.left   == mi.rcMonitor.left &&
                 rect.top    == mi.rcMonitor.top &&
@@ -856,18 +859,18 @@ os_window_is_fullscreen(OS_Window* window)
 }
 
 function void
-os_window_set_fullscreen(OS_Window* window, b32 set)
+os_window_set_fullscreen(b32 set)
 {
   static WINDOWPLACEMENT prev = { sizeof(prev) };
   if (set)
   {
-    GetWindowPlacement(window->window_handle, &prev);
+    GetWindowPlacement(g_os_window.window_handle, &prev);
 
     MONITORINFO mi = { sizeof(mi) };
-    GetMonitorInfo(MonitorFromWindow(window->window_handle, MONITOR_DEFAULTTONEAREST), &mi);
+    GetMonitorInfo(MonitorFromWindow(g_os_window.window_handle, MONITOR_DEFAULTTONEAREST), &mi);
 
-    SetWindowLong(window->window_handle, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-    SetWindowPos(window->window_handle, HWND_TOP,
+    SetWindowLong(g_os_window.window_handle, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+    SetWindowPos(g_os_window.window_handle, HWND_TOP,
                  mi.rcMonitor.left, mi.rcMonitor.top,
                  mi.rcMonitor.right - mi.rcMonitor.left,
                  mi.rcMonitor.bottom - mi.rcMonitor.top,
@@ -875,61 +878,61 @@ os_window_set_fullscreen(OS_Window* window, b32 set)
   }
   else
   {
-    SetWindowLong(window->window_handle, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
-    SetWindowPlacement(window->window_handle, &prev);
-    SetWindowPos(window->window_handle, NULL, 0, 0, 0, 0,
+    SetWindowLong(g_os_window.window_handle, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
+    SetWindowPlacement(g_os_window.window_handle, &prev);
+    SetWindowPos(g_os_window.window_handle, NULL, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
                  SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
   }
 }
 
 function b32
-os_window_is_maximized(OS_Window* window)
+os_window_is_maximized()
 {
-  b32 result = IsZoomed(window->window_handle);
+  b32 result = IsZoomed(g_os_window.window_handle);
   return result;
 }
 
 function void
-os_window_set_maximized(OS_Window* window, b32 set)
+os_window_set_maximized(b32 set)
 {
-  ShowWindow(window->window_handle, set ? SW_MAXIMIZE : SW_RESTORE);
+  ShowWindow(g_os_window.window_handle, set ? SW_MAXIMIZE : SW_RESTORE);
 }
 
 function b32
-os_window_is_minimized(OS_Window* window)
+os_window_is_minimized()
 {
-  b32 result = IsIconic(window->window_handle);
+  b32 result = IsIconic(g_os_window.window_handle);
   return result;
 }
 
 function void
-os_window_set_minimized(OS_Window* window, b32 set)
+os_window_set_minimized(b32 set)
 {
-  ShowWindow(window->window_handle, set ? SW_MINIMIZE : SW_RESTORE);
+  ShowWindow(g_os_window.window_handle, set ? SW_MINIMIZE : SW_RESTORE);
 }
 
 function void
-os_swap_buffers(OS_Window* window)
+os_swap_buffers()
 {
-  SwapBuffers(window->device_context);
+  SwapBuffers(g_os_window.device_context);
 }
 
 ///////////////////////////////////////////////////////
 // @Section: Window Appearance
 
 function void
-os_window_set_visible(OS_Window* window, b32 visible)
+os_window_set_visible(b32 visible)
 {
-  ShowWindow(window->window_handle, visible ? SW_SHOW : SW_HIDE);
+  ShowWindow(g_os_window.window_handle, visible ? SW_SHOW : SW_HIDE);
 }
 
 function b32
-os_window_set_title(OS_Window* window, String8 title)
+os_window_set_title(String8 title)
 {
   Scratch scratch = scratch_begin(0, 0);
   char* ctitle = cstring_from_string8(scratch.arena, title);
-  b32 result = SetWindowTextA(window->window_handle, ctitle);
+  b32 result = SetWindowTextA(g_os_window.window_handle, ctitle);
   win32_check_error();
   // TODO(fz): Add title to g_os_window
   scratch_end(&scratch);
@@ -961,17 +964,17 @@ os_window_push_custom_title_bar_client_area()
 }
 
 function void
-os_window_set_position(OS_Window* window, Vec2f32 pos)
+os_window_set_position(Vec2f32 pos)
 {
-  SetWindowPos(window->window_handle, 0,
+  SetWindowPos(g_os_window.window_handle, 0,
                (int)pos.x, (int)pos.y, 0, 0,
                SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
 function void
-os_window_set_size(OS_Window* window, s32 width, s32 height)
+os_window_set_size(s32 width, s32 height)
 {
-  SetWindowPos(window->window_handle, 0,
+  SetWindowPos(g_os_window.window_handle, 0,
                0, 0, width, height,
                SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 }
@@ -983,15 +986,13 @@ LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   Input_State* input = (Input_State*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-  OS_Window* window  = (OS_Window*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-
   switch (message) 
   {
     case WM_SETCURSOR:
     {
       if (LOWORD(lParam) == HTCLIENT) 
       {
-        os_cursor_set(CURSOR_ARROW);
+        os_cursor_set(_g_current_cursor);
         return true;
       }
     }
@@ -999,7 +1000,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_SIZE: 
     {
-      g_os_resize_callback(window, LOWORD(lParam), HIWORD(lParam));
+      g_os_resize_callback(LOWORD(lParam), HIWORD(lParam));
       return 0;
     }
     break;
@@ -1052,37 +1053,37 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     // Mouse Buttons
     case WM_LBUTTONDOWN: 
     {
-      _input_process_mouse_button(input, MouseButton_Left, true);
+      _input_process_mouse_button(input, Mouse_Button_Left, true);
       return 0;
     }
     break;
     case WM_LBUTTONUP: 
     {
-      _input_process_mouse_button(input, MouseButton_Left, false);
+      _input_process_mouse_button(input, Mouse_Button_Left, false);
       return 0;
     }
     break;
     case WM_RBUTTONDOWN: 
     {
-      _input_process_mouse_button(input, MouseButton_Right, true);
+      _input_process_mouse_button(input, Mouse_Button_Right, true);
       return 0;
     }
     break;
     case WM_RBUTTONUP: 
     {
-      _input_process_mouse_button(input, MouseButton_Right, false);
+      _input_process_mouse_button(input, Mouse_Button_Right, false);
       return 0;
     }
     break;
     case WM_MBUTTONDOWN: 
     {
-      _input_process_mouse_button(input, MouseButton_Middle, true);
+      _input_process_mouse_button(input, Mouse_Button_Middle, true);
       return 0;
     }
     break;
     case WM_MBUTTONUP: 
     {
-      _input_process_mouse_button(input, MouseButton_Middle, false);
+      _input_process_mouse_button(input, Mouse_Button_Middle, false);
       return 0;
     }
     break;
@@ -1096,7 +1097,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_DESTROY: 
     {
-      ReleaseDC(hWnd, window->device_context);
+      ReleaseDC(hWnd, g_os_window.device_context);
       PostQuitMessage(0);
       return 0;
     }
@@ -1137,11 +1138,11 @@ _win32_window_create(HINSTANCE hInstance, s32 width, s32 height, String8 title)
 }
 
 function void
-_win32_window_resize_callback(OS_Window* window, s32 width, s32 height)
+_win32_window_resize_callback(s32 width, s32 height)
 {
   if (height == 0) height = 1;
   if (width == 0)  width  = 1;
-  window->dimensions.x = width;
-  window->dimensions.y = height;
+  g_os_window.dimensions.x = width;
+  g_os_window.dimensions.y = height;
   glViewport(0, 0, width, height);
 }

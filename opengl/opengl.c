@@ -51,7 +51,7 @@ _os_opengl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity
       "  Type: %s\n"
       "  Severity: %s\n"
       "  ID: %u\n"
-      "  Message: %.*s",
+      "  Message: " S_FMT,
       source_str, type_str, severity_str, id, length, message);
   }
 

@@ -1,20 +1,30 @@
 #ifndef ART_H
 #define ART_H
 
-#define COLOR_RED(a)       vec4f32(1.0f,  0.0f,  0.0f,  a)
-#define COLOR_GREEN(a)     vec4f32(0.0f,  1.0f,  0.0f,  a)
-#define COLOR_BLUE(a)      vec4f32(0.0f,  0.0f,  1.0f,  a)
-#define COLOR_YELLOW(a)    vec4f32(1.0f,  1.0f,  0.0f,  a)
-#define COLOR_CYAN(a)      vec4f32(0.0f,  1.0f,  1.0f,  a)
-#define COLOR_MAGENTA(a)   vec4f32(1.0f,  0.0f,  1.0f,  a)
-#define COLOR_WHITE(a)     vec4f32(1.0f,  1.0f,  1.0f,  a)
-#define COLOR_BLACK(a)     vec4f32(0.0f,  0.0f,  0.0f,  a)
-#define COLOR_GRAY(a)      vec4f32(0.5f,  0.5f,  0.5f,  a)
-#define COLOR_LIGHTGRAY(a) vec4f32(0.75f, 0.75f, 0.75f, a)
-#define COLOR_DARKGRAY(a)  vec4f32(0.25f, 0.25f, 0.25f, a)
-#define COLOR_ORANGE(a)    vec4f32(1.0f,  0.5f,  0.0f,  a)
-#define COLOR_PURPLE(a)    vec4f32(0.5f,  0.0f,  0.5f,  a)
-#define COLOR_BROWN(a)     vec4f32(0.6f,  0.4f,  0.2f,  a)
-#define COLOR_PINK(a)      vec4f32(1.0f,  0.75f, 0.8f,  a)
+typedef Vec4f32 Color;
+#define color(x,y,z,a) vec4f32(x,y,z,a)
+
+#define RED(a)       color(1.0f,  0.0f,  0.0f,  a)
+#define GREEN(a)     color(0.0f,  1.0f,  0.0f,  a)
+#define BLUE(a)      color(0.0f,  0.0f,  1.0f,  a)
+#define YELLOW(a)    color(1.0f,  1.0f,  0.0f,  a)
+#define CYAN(a)      color(0.0f,  1.0f,  1.0f,  a)
+#define MAGENTA(a)   color(1.0f,  0.0f,  1.0f,  a)
+#define WHITE(a)     color(1.0f,  1.0f,  1.0f,  a)
+#define BLACK(a)     color(0.0f,  0.0f,  0.0f,  a)
+#define GRAY(a)      color(0.5f,  0.5f,  0.5f,  a)
+#define ORANGE(a)    color(1.0f,  0.5f,  0.0f,  a)
+#define PURPLE(a)    color(0.5f,  0.0f,  0.5f,  a)
+#define BROWN(a)     color(0.6f,  0.4f,  0.2f,  a)
+#define PINK(a)      color(1.0f,  0.75f, 0.8f,  a)
+
+function Color color_lerp(Vec4f32 a, Vec4f32 b, f32 t);
 
 #endif // ART_H
+
+function Color
+color_lerp(Color a, Color b, f32 t)
+{
+  Color result = vec4f32_lerp(a, b, t);
+  return result;
+}

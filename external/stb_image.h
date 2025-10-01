@@ -434,7 +434,7 @@ STBIDEF stbi_uc *stbi_load_gif_from_memory(stbi_uc const *buffer, int len, int *
 #endif
 
 #ifdef STBI_WINDOWS_UTF8
-STBIDEF int stbi_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* g_input);
+STBIDEF int stbi_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* input);
 #endif
 
 ////////////////////////////////////
@@ -1328,9 +1328,9 @@ STBI_EXTERN __declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int
 #endif
 
 #if defined(_WIN32) && defined(STBI_WINDOWS_UTF8)
-STBIDEF int stbi_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* g_input)
+STBIDEF int stbi_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* input)
 {
-	return WideCharToMultiByte(65001 /* UTF8 */, 0, g_input, -1, buffer, (int) bufferlen, NULL, NULL);
+	return WideCharToMultiByte(65001 /* UTF8 */, 0, input, -1, buffer, (int) bufferlen, NULL, NULL);
 }
 #endif
 
@@ -3476,23 +3476,23 @@ static stbi_uc*  stbi__resample_row_h_2(stbi_uc *out, stbi_uc *in_near, stbi_uc 
 {
    // need to generate two samples horizontally for every one in input
    int i;
-   stbi_uc *g_input = in_near;
+   stbi_uc *input = in_near;
 
    if (w == 1) {
       // if only one sample, can't do any interpolation
-      out[0] = out[1] = g_input[0];
+      out[0] = out[1] = input[0];
       return out;
    }
 
-   out[0] = g_input[0];
-   out[1] = stbi__div4(g_input[0]*3 + g_input[1] + 2);
+   out[0] = input[0];
+   out[1] = stbi__div4(input[0]*3 + input[1] + 2);
    for (i=1; i < w-1; ++i) {
-      int n = 3*g_input[i]+2;
-      out[i*2+0] = stbi__div4(n+g_input[i-1]);
-      out[i*2+1] = stbi__div4(n+g_input[i+1]);
+      int n = 3*input[i]+2;
+      out[i*2+0] = stbi__div4(n+input[i-1]);
+      out[i*2+1] = stbi__div4(n+input[i+1]);
    }
-   out[i*2+0] = stbi__div4(g_input[w-2]*3 + g_input[w-1] + 2);
-   out[i*2+1] = g_input[w-1];
+   out[i*2+0] = stbi__div4(input[w-2]*3 + input[w-1] + 2);
+   out[i*2+1] = input[w-1];
 
    STBI_NOTUSED(in_far);
    STBI_NOTUSED(hs);
@@ -7128,18 +7128,18 @@ static char *stbi__hdr_gettoken(stbi__context *z, char *buffer)
    return buffer;
 }
 
-static void stbi__hdr_convert(float *output, stbi_uc *g_input, int req_comp)
+static void stbi__hdr_convert(float *output, stbi_uc *input, int req_comp)
 {
-   if ( g_input[3] != 0 ) {
+   if ( input[3] != 0 ) {
       float f1;
       // Exponent
-      f1 = (float) ldexp(1.0f, g_input[3] - (int)(128 + 8));
+      f1 = (float) ldexp(1.0f, input[3] - (int)(128 + 8));
       if (req_comp <= 2)
-         output[0] = (g_input[0] + g_input[1] + g_input[2]) * f1 / 3;
+         output[0] = (input[0] + input[1] + input[2]) * f1 / 3;
       else {
-         output[0] = g_input[0] * f1;
-         output[1] = g_input[1] * f1;
-         output[2] = g_input[2] * f1;
+         output[0] = input[0] * f1;
+         output[1] = input[1] * f1;
+         output[2] = input[2] * f1;
       }
       if (req_comp == 2) output[1] = 1;
       if (req_comp == 4) output[3] = 1;

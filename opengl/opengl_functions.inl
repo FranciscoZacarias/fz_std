@@ -59,3 +59,5 @@ GL_FUNC(void,   glUniform1iv,               (GLint location, GLsizei count, cons
 GL_FUNC(void,   glUseProgram,               (GLuint program))
 GL_FUNC(void,   glProgramUniform1iv,        (GLuint program, GLint location, GLsizei count, const GLint *value))
 GL_FUNC(void,   glPolygonMode,              (GLenum face, GLenum mode))
+GL_FUNC(void,   glDepthRangef,              (GLfloat n, GLfloat f))
+GL_FUNC(void,   glLineWidth,                (GLfloat width))

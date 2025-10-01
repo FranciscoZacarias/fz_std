@@ -2,7 +2,7 @@
 #define MEMORY_H
 
 #ifndef ARENA_RESERVE_SIZE
-# define ARENA_RESERVE_SIZE Gigabytes(1)
+# define ARENA_RESERVE_SIZE Megabytes(64)
 #endif
 #ifndef ARENA_COMMIT_SIZE
 # define ARENA_COMMIT_SIZE Kilobytes(64)

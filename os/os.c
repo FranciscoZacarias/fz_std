@@ -1,16 +1,16 @@
 ///////////////////////////////////////////////////////
 // @Section: Input
 function void
-_input_init(OS_Window* window, Input_State* input)
+_input_init(Input_State* input)
 {
   AssertNoReentry();
   MemoryZeroStruct(input);
 
-  input->mouse_current.screen_space.x = window->dimensions.x/2;
-  input->mouse_current.screen_space.y = window->dimensions.y/2;
+  input->mouse_current.screen_space.x = g_os_window.dimensions.x/2;
+  input->mouse_current.screen_space.y = g_os_window.dimensions.y/2;
   
-  input->mouse_previous.screen_space.x = window->dimensions.x/2;
-  input->mouse_previous.screen_space.y = window->dimensions.y/2;
+  input->mouse_previous.screen_space.x = g_os_window.dimensions.x/2;
+  input->mouse_previous.screen_space.y = g_os_window.dimensions.y/2;
 
   input->_g_ignore_next_mouse_move = false;
   input->_g_is_cursor_locked       = false;
@@ -19,6 +19,10 @@ _input_init(OS_Window* window, Input_State* input)
 function void
 _input_update(Input_State* input)
 {
+  // Compute new deltas
+  input->mouse_current.delta.x = input->mouse_current.screen_space.x - input->mouse_previous.screen_space.x; 
+  input->mouse_current.delta.y = input->mouse_current.screen_space.y - input->mouse_previous.screen_space.y;
+
   MemoryCopy(&(input->keyboard_previous), &(input->keyboard_current), sizeof(Keyboard_State));
   MemoryCopy(&(input->mouse_previous),    &(input->mouse_current),    sizeof(Mouse_State));
 }
@@ -52,7 +56,7 @@ input_was_key_down(Input_State* input, Keyboard_Key key)
 }
 
 function b32
-input_is_key_pressed(Input_State* input, Keyboard_Key key)
+input_is_key_clicked(Input_State* input, Keyboard_Key key)
 {
   return input_is_key_down(input, key) && input_was_key_up(input, key);
 }
@@ -95,7 +99,7 @@ input_was_button_down(Input_State* input, Mouse_Button button)
 }
 
 function b32
-input_is_button_pressed(Input_State* input, Mouse_Button button)
+input_is_button_clicked(Input_State* input, Mouse_Button button)
 {
   b32 result = input_is_button_down(input, button) && input_was_button_up(input, button);
   return result;
@@ -115,14 +119,10 @@ _input_process_mouse_cursor(Input_State* input, s32 x, s32 y)
 {
   // Copy current state to previous
   MemoryCopyStruct(&(input->mouse_previous), &(input->mouse_current));
-
-  // Compute new deltas
-  input->mouse_current.delta.x = x - input->mouse_previous.screen_space.x;
-  input->mouse_current.delta.y = y - input->mouse_previous.screen_space.y;
-
+  
   // Update current position
-  input->mouse_current.screen_space.x = x;
-  input->mouse_current.screen_space.y = y;
+  input->mouse_current.screen_space.x = x; 
+  input->mouse_current.screen_space.y = y; 
 }
 
 ///////////////////////////////////////////////////////

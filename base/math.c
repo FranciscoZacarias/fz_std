@@ -101,6 +101,17 @@ vec2f32_scale(Vec2f32 v, f32 scalar)
   return result;
 }
 
+function Vec2f32
+vec2f32_rotate(Vec2f32 v, f32 radians)
+{
+  Vec2f32 result;
+  f32 cos_theta = cosf(radians);
+  f32 sin_theta = sinf(radians);
+  result.x = v.x * cos_theta - v.y * sin_theta;
+  result.y = v.x * sin_theta + v.y * cos_theta;
+  return result;
+}
+
 function f32
 vec2f32_dot(Vec2f32 a, Vec2f32 b)
 {
@@ -442,6 +453,17 @@ vec3f32_angle(Vec3f32 a, Vec3f32 b)
   return result;
 }
 
+function Vec3s32
+vec3s32_add(Vec3s32 a, Vec3s32 b)
+{
+  Vec3s32 result = {
+    a.x + b.x,
+    a.y + b.y,
+    a.z + b.z
+  };
+  return result;
+}
+
 function Vec4f32
 vec4f32_from_vec3f32(Vec3f32 v)
 {
@@ -565,6 +587,24 @@ vec4f32_distance(Vec4f32 a, Vec4f32 b)
 
 //////////////////////////////////////////////
 // Matrix4 f32
+
+function b32
+mat4f32_equals(Mat4f32 a, Mat4f32 b)
+{
+  b32 result = true;
+  for (u32 i = 0; i < 4; i += 1)
+  {
+    for (u32 j = 0; j < 4; j += 1)
+    {
+      if (fabs(a.data[i][j]) != fabs(b.data[i][j]))
+      {
+        result = false;
+        break;
+      }
+    }
+  }
+  return result;
+}
 
 function Mat4f32
 mat4f32_mul(Mat4f32 left, Mat4f32 right)
@@ -803,6 +843,141 @@ mat4f32_scale(f32 x, f32 y, f32 z)
 }
 
 function Mat4f32
+mat4f32_inverse(Mat4f32 m)
+{
+  Mat4f32 result;
+  f32* o = (f32*)&result;
+  f32* a = (f32*)&m;
+
+  o[0] = a[5]  * a[10] * a[15] -
+         a[5]  * a[11] * a[14] -
+         a[9]  * a[6]  * a[15] +
+         a[9]  * a[7]  * a[14] +
+         a[13] * a[6]  * a[11] -
+         a[13] * a[7]  * a[10];
+
+  o[4] = -a[4]  * a[10] * a[15] +
+          a[4]  * a[11] * a[14] +
+          a[8]  * a[6]  * a[15] -
+          a[8]  * a[7]  * a[14] -
+          a[12] * a[6]  * a[11] +
+          a[12] * a[7]  * a[10];
+
+  o[8] = a[4]  * a[9] * a[15] -
+         a[4]  * a[11] * a[13] -
+         a[8]  * a[5] * a[15] +
+         a[8]  * a[7] * a[13] +
+         a[12] * a[5] * a[11] -
+         a[12] * a[7] * a[9];
+
+  o[12] = -a[4]  * a[9] * a[14] +
+           a[4]  * a[10] * a[13] +
+           a[8]  * a[5] * a[14] -
+           a[8]  * a[6] * a[13] -
+           a[12] * a[5] * a[10] +
+           a[12] * a[6] * a[9];
+
+  o[1] = -a[1]  * a[10] * a[15] +
+          a[1]  * a[11] * a[14] +
+          a[9]  * a[2] * a[15] -
+          a[9]  * a[3] * a[14] -
+          a[13] * a[2] * a[11] +
+          a[13] * a[3] * a[10];
+
+  o[5] = a[0]  * a[10] * a[15] -
+         a[0]  * a[11] * a[14] -
+         a[8]  * a[2] * a[15] +
+         a[8]  * a[3] * a[14] +
+         a[12] * a[2] * a[11] -
+         a[12] * a[3] * a[10];
+
+  o[9] = -a[0]  * a[9] * a[15] +
+          a[0]  * a[11] * a[13] +
+          a[8]  * a[1] * a[15] -
+          a[8]  * a[3] * a[13] -
+          a[12] * a[1] * a[11] +
+          a[12] * a[3] * a[9];
+
+  o[13] = a[0]  * a[9] * a[14] -
+          a[0]  * a[10] * a[13] -
+          a[8]  * a[1] * a[14] +
+          a[8]  * a[2] * a[13] +
+          a[12] * a[1] * a[10] -
+          a[12] * a[2] * a[9];
+
+  o[2] = a[1]  * a[6] * a[15] -
+         a[1]  * a[7] * a[14] -
+         a[5]  * a[2] * a[15] +
+         a[5]  * a[3] * a[14] +
+         a[13] * a[2] * a[7] -
+         a[13] * a[3] * a[6];
+
+  o[6] = -a[0]  * a[6] * a[15] +
+          a[0]  * a[7] * a[14] +
+          a[4]  * a[2] * a[15] -
+          a[4]  * a[3] * a[14] -
+          a[12] * a[2] * a[7] +
+          a[12] * a[3] * a[6];
+
+  o[10] = a[0]  * a[5] * a[15] -
+          a[0]  * a[7] * a[13] -
+          a[4]  * a[1] * a[15] +
+          a[4]  * a[3] * a[13] +
+          a[12] * a[1] * a[7] -
+          a[12] * a[3] * a[5];
+
+  o[14] = -a[0]  * a[5] * a[14] +
+           a[0]  * a[6] * a[13] +
+           a[4]  * a[1] * a[14] -
+           a[4]  * a[2] * a[13] -
+           a[12] * a[1] * a[6] +
+           a[12] * a[2] * a[5];
+
+  o[3] = -a[1] * a[6] * a[11] +
+          a[1] * a[7] * a[10] +
+          a[5] * a[2] * a[11] -
+          a[5] * a[3] * a[10] -
+          a[9] * a[2] * a[7] +
+          a[9] * a[3] * a[6];
+
+  o[7] = a[0] * a[6] * a[11] -
+         a[0] * a[7] * a[10] -
+         a[4] * a[2] * a[11] +
+         a[4] * a[3] * a[10] +
+         a[8] * a[2] * a[7] -
+         a[8] * a[3] * a[6];
+
+  o[11] = -a[0] * a[5] * a[11] +
+           a[0] * a[7] * a[9] +
+           a[4] * a[1] * a[11] -
+           a[4] * a[3] * a[9] -
+           a[8] * a[1] * a[7] +
+           a[8] * a[3] * a[5];
+
+  o[15] = a[0] * a[5] * a[10] -
+          a[0] * a[6] * a[9] -
+          a[4] * a[1] * a[10] +
+          a[4] * a[2] * a[9] +
+          a[8] * a[1] * a[6] -
+          a[8] * a[2] * a[5];
+
+  f32 det = a[0] * o[0] + a[1] * o[4] + a[2] * o[8] + a[3] * o[12];
+  // f32 det = a[0] * o[0] + a[4] * o[1] + a[8] * o[2] + a[12] * o[3];
+  if (det == 0.0f)
+  {
+    return mat4f32_identity();
+  }
+
+  f32 inv_det = 1.0f / det;
+  for (int i = 0; i < 16; i += 1)
+  {
+    o[i] *= inv_det;
+  }
+
+  return result;
+}
+
+function Mat4f32
 mat4f32_frustum(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane)
 {
   Mat4f32 result = { 0 };
@@ -867,7 +1042,7 @@ mat4f32_perspective(f32 fov_degrees, f32 window_width, f32 window_height, f32 ne
 }
 
 function Mat4f32
-mat4f32_ortographic(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane)
+mat4f32_orthographic(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane)
 {
   Mat4f32 result = { 0 };
   

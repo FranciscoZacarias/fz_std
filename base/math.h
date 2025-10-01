@@ -10,82 +10,67 @@
 // @Section: Vec2
 typedef union Vec2u16 { u16 data[2]; struct { u16 x, y; }; } Vec2u16;
 #define vec2u16(x,y) ((Vec2u16){x,y})
-
 typedef union Vec2u32 { u32 data[2]; struct { u32 x, y; }; } Vec2u32;
 #define vec2u32(x,y) ((Vec2u32){x,y})
-
 typedef union Vec2u64 { u64 data[2]; struct { u64 x, y; }; } Vec2u64;
 #define vec2u64(x,y) ((Vec2u64){x,y})
-
 typedef union Vec2s16 { s16 data[2]; struct { s16 x, y; }; } Vec2s16;
 #define vec2s16(x,y) ((Vec2s16){x,y})
-
 typedef union Vec2s32 { s32 data[2]; struct { s32 x, y; }; } Vec2s32;
 #define vec2s32(x,y) ((Vec2s32){x,y})
-
 typedef union Vec2s64 { s64 data[2]; struct { s64 x, y; }; } Vec2s64;
 #define vec2s64(x,y) ((Vec2s64){x,y})
-
 typedef union Vec2f32 { f32 data[2]; struct { f32 x, y; }; } Vec2f32;
 #define vec2f32(x,y) ((Vec2f32){x,y})
-
 typedef union Vec2f64 { f64 data[2]; struct { f64 x, y; }; } Vec2f64;
 #define vec2f64(x,y) ((Vec2f64){x,y})
-
 
 // @Section: Vec3
 typedef union Vec3u16 { u16 data[3]; struct { u16 x, y, z; }; } Vec3u16;
 #define vec3u16(x,y,z) ((Vec3u16){x,y,z})
-
 typedef union Vec3u32 { u32 data[3]; struct { u32 x, y, z; }; } Vec3u32;
 #define vec3u32(x,y,z) ((Vec3u32){x,y,z})
-
 typedef union Vec3u64 { u64 data[3]; struct { u64 x, y, z; }; } Vec3u64;
 #define vec3u64(x,y,z) ((Vec3u64){x,y,z})
-
 typedef union Vec3s16 { s16 data[3]; struct { s16 x, y, z; }; } Vec3s16;
 #define vec3s16(x,y,z) ((Vec3s16){x,y,z})
-
 typedef union Vec3s32 { s32 data[3]; struct { s32 x, y, z; }; } Vec3s32;
 #define vec3s32(x,y,z) ((Vec3s32){x,y,z})
-
 typedef union Vec3s64 { s64 data[3]; struct { s64 x, y, z; }; } Vec3s64;
 #define vec3s64(x,y,z) ((Vec3s64){x,y,z})
-
 typedef union Vec3f32 { f32 data[3]; struct { f32 x, y, z; }; } Vec3f32;
 #define vec3f32(x,y,z) ((Vec3f32){x,y,z})
-
 typedef union Vec3f64 { f64 data[3]; struct { f64 x, y, z; }; } Vec3f64;
 #define vec3f64(x,y,z) ((Vec3f64){x,y,z})
-
 
 // @Section: Vec4
 typedef union Vec4u16 { u16 data[4]; struct { u16 x, y, z, w; }; } Vec4u16;
 #define vec4u16(x,y,z,w) ((Vec4u16){x,y,z,w})
-
 typedef union Vec4u32 { u32 data[4]; struct { u32 x, y, z, w; }; } Vec4u32;
 #define vec4u32(x,y,z,w) ((Vec4u32){x,y,z,w})
-
 typedef union Vec4u64 { u64 data[4]; struct { u64 x, y, z, w; }; } Vec4u64;
 #define vec4u64(x,y,z,w) ((Vec4u64){x,y,z,w})
-
 typedef union Vec4s16 { s16 data[4]; struct { s16 x, y, z, w; }; } Vec4s16;
 #define vec4s16(x,y,z,w) ((Vec4s16){x,y,z,w})
-
 typedef union Vec4s32 { s32 data[4]; struct { s32 x, y, z, w; }; } Vec4s32;
 #define vec4s32(x,y,z,w) ((Vec4s32){x,y,z,w})
-
 typedef union Vec4s64 { s64 data[4]; struct { s64 x, y, z, w; }; } Vec4s64;
 #define vec4s64(x,y,z,w) ((Vec4s64){x,y,z,w})
-
 typedef union Vec4f32 { f32 data[4]; struct { f32 x, y, z, w; }; } Vec4f32;
 #define vec4f32(x,y,z,w) ((Vec4f32){x,y,z,w})
-
 typedef union Vec4f64 { f64 data[4]; struct { f64 x, y, z, w; }; } Vec4f64;
 #define vec4f64(x,y,z,w) ((Vec4f64){x,y,z,w})
 
+// @Section: Rect
+typedef struct Rectf32 { Vec2f32 top_left; Vec2f32 size; } Rectf32;
+#define rectf32(top_left,size) ((Rectf32){top_left,size})
+typedef struct Rects32 { Vec2s32 top_left; Vec2s32 size; } Rects32;
+#define rects32(top_left,size) ((Rects32){top_left,size})
+typedef struct Rectu32 { Vec2u32 top_left; Vec2u32 size; } Rectu32;
+#define rectu32(top_left,size) ((Rectu32){top_left,size})
 
 // @Section: Matrix
+// Column major
 typedef union Mat4f32 {
   f32 data[4][4];
   struct {
@@ -136,7 +121,6 @@ function f32 f32_normalize(f32 value, f32 start, f32 end);
 function f32 f32_remap(f32 value, f32 inputStart, f32 inputEnd, f32 outputStart, f32 outputEnd);
 function f32 f32_wrap(f32 value, f32 min, f32 Max);
 
-// TODO(fz): Rename functions to match their type E,g, vec2f32_distance -> vec2f32_distance
 function f32 vec2f32_distance(Vec2f32 a, Vec2f32 b);
 function f32 vec2f32_distance_signed(Vec2f32 a, Vec2f32 b, Vec2f32 reference);
 
@@ -144,18 +128,17 @@ function Vec2f32 vec2f32_add(Vec2f32 a, Vec2f32 b);
 function Vec2f32 vec2f32_sub(Vec2f32 a, Vec2f32 b);
 function Vec2f32 vec2f32_mul(Vec2f32 a, Vec2f32 b);
 function Vec2f32 vec2f32_scale(Vec2f32 v, f32 scalar);
+function Vec2f32 vec2f32_rotate(Vec2f32 v, f32 radians);
 function Vec2f32 vec2f32_normalize(Vec2f32 v);
 function Vec2f32 vec2f32_lerp(Vec2f32 a, Vec2f32 b, f32 t);
 function f32 vec2f32_dot(Vec2f32 a, Vec2f32 b);
 function f32 vec2f32_length(Vec2f32 v);
 
 function Vec3f32 vec3f32_from_vec4f32(Vec4f32 v); /* Discards the w value */
-
 function Vec3f32 vec3f32_add(Vec3f32 a, Vec3f32 b);
 function Vec3f32 vec3f32_sub(Vec3f32 a, Vec3f32 b);
 function Vec3f32 vec3f32_mul(Vec3f32 a, Vec3f32 b);
 function Vec3f32 vec3f32_div(Vec3f32 a, Vec3f32 b);
-
 function Vec3f32 vec3f32_cross(Vec3f32 a, Vec3f32 b);
 function Vec3f32 vec3f32_scale(Vec3f32 v, f32 scalar);
 function Vec3f32 vec3f32_scale_xyz(Vec3f32 v, f32 scale_x, f32 scale_y, f32 scale_z);
@@ -163,15 +146,14 @@ function Vec3f32 vec3f32_normalize(Vec3f32 v);
 function Vec3f32 vec3f32_rotate_by_axis(Vec3f32 v, Vec3f32 axis, f32 angle);
 function Vec3f32 vec3f32_lerp(Vec3f32 a, Vec3f32 b, f32 t);
 function Vec3f32 vec3f32_unproject(Vec3f32 source, Mat4f32 projection, Mat4f32 view);
-function Vec3f32 mat4f32_transform_vec3f32(Mat4f32 mat, Vec3f32 vec);
+function f32     vec3f32_dot(Vec3f32 a, Vec3f32 b);
+function f32     vec3f32_length(Vec3f32 v);
+function f32     vec3f32_distance(Vec3f32 a, Vec3f32 b);
+function f32     vec3f32_angle(Vec3f32 a, Vec3f32 b);
 
-function f32 vec3f32_dot(Vec3f32 a, Vec3f32 b);
-function f32 vec3f32_length(Vec3f32 v);
-function f32 vec3f32_distance(Vec3f32 a, Vec3f32 b);
-function f32 vec3f32_angle(Vec3f32 a, Vec3f32 b);
+function Vec3s32 vec3s32_add(Vec3s32 a, Vec3s32 b);
 
 function Vec4f32 vec4f32_from_vec3f32(Vec3f32 v);
-
 function Vec4f32 vec4f32_add(Vec4f32 a, Vec4f32 b);
 function Vec4f32 vec4f32_sub(Vec4f32 a, Vec4f32 b);
 function Vec4f32 vec4f32_mul(Vec4f32 a, Vec4f32 b);
@@ -186,8 +168,10 @@ function f32 vec4f32_dot(Vec4f32 a, Vec4f32 b);
 function f32 vec4f32_length(Vec4f32 v);
 function f32 vec4f32_distance(Vec4f32 a, Vec4f32 b);
 
+function b32     mat4f32_equals(Mat4f32 a, Mat4f32 b);
 function Mat4f32 mat4f32_mul(Mat4f32 left, Mat4f32 right); /* Apply the left matrix to the right matrix*/ 
 
+function Vec3f32 mat4f32_transform_vec3f32(Mat4f32 mat, Vec3f32 vec);
 function Mat4f32 mat4f32_translate(f32 x, f32 y, f32 z);
 function Mat4f32 mat4f32_rotate_axis(Vec3f32 axis, f32 radians);
 function Mat4f32 mat4f32_rotate_x(f32 radians);
@@ -198,9 +182,10 @@ function Mat4f32 mat4f32_rotate_zyx(Vec3f32 radians);
 
 function Mat4f32 mat4f32_transpose(Mat4f32 m);
 function Mat4f32 mat4f32_scale(f32 x, f32 y, f32 z);
+function Mat4f32 mat4f32_inverse(Mat4f32 m);
 function Mat4f32 mat4f32_frustum(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane);
 function Mat4f32 mat4f32_perspective(f32 fovy, f32 window_width, f32 window_height, f32 near_plane, f32 far_plane);
-function Mat4f32 mat4f32_ortographic(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane);
+function Mat4f32 mat4f32_orthographic(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane);
 function Mat4f32 mat4f32_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
 function Mat4f32 mat4f32_from_quatf32(Quatf32 q);
 function Transform3f32 transformf32_from_mat4f32(Mat4f32 mat);

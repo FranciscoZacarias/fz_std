@@ -92,7 +92,7 @@ string8_find_last(String8 str, String8 substring, u64* index)
 function void
 print(String8 str)
 {
-  printf("%.*s", (s32)str.size, str.str);
+  printf(S_FMT, (s32)str.size, str.str);
 }
 
 function String8
@@ -120,29 +120,57 @@ string8_from_format(Arena* arena, char const* fmt, ...)
   return result;
 }
 
-function String8_List
-string8_split(Arena* arena, String8 str, String8 split_character)
+function u64
+string8_hash(String8 str)
 {
-  String8_List result = { 0 };
-  if (split_character.size != 1)
+  u64 hash = 5381;
+  for (u32 i = 0; i < str.size; i += 1)
   {
-    printf("string8_split expects only one char8acter in split_character. It got %s of size %llu\n", split_character.str, split_character.size);
+    hash = ((hash << 5) + hash) + (u8)(str.str[i]);
   }
-  else
+  hash ^= str.size;
+  return hash;
+}
+
+function String8_List
+string8_split(Arena* arena, String8 str, String8 delimiter)
+{
+  String8_List result = {0};
+  if (delimiter.size == 0)
   {
-    u8* cursor = str.str;
-    u8* end    = str.str + str.size;
-    for(; cursor < end; cursor++)
+    printf("string8_split: delimiter must not be empty\n");
+    return result;
+  }
+
+  u8* cursor = str.str;
+  u8* end    = str.str + str.size;
+
+  while (cursor < end)
+  {
+    u8* match = NULL;
+
+    for (u8* scan = cursor; scan + delimiter.size <= end; scan++)
     {
-      u8 byte  = *cursor;
-      if (byte == split_character.str[0])
+      if (memcmp(scan, delimiter.str, delimiter.size) == 0)
       {
-        string8_list_push(arena, &result, string8_range(str.str, cursor));
-        string8_list_push(arena, &result, string8_range(cursor, end));
+        match = scan;
         break;
       }
     }
+
+    if (match)
+    {
+      string8_list_push(arena, &result, string8_range(cursor, match));
+
+      cursor = match + delimiter.size;
+    }
+    else
+    {
+      string8_list_push(arena, &result, string8_range(cursor, end));
+      break;
+    }
   }
+
   return result;
 }
 

@@ -148,7 +148,7 @@ global u32 _win32_key_table[Keyboard_Key_Count] =
 ///////////////////////////////////////////////////////
 // @Section: Window
 function HWND _win32_window_create(HINSTANCE hInstance, s32 width, s32 height, String8 title); /* Creates a win32 window */
-function void _win32_window_resize_callback(OS_Window* window, s32 width, s32 height);  
+function void _win32_window_resize_callback(s32 width, s32 height);  
 
 ///////////////////////////////////////////////////////
 // @Section: Error handling

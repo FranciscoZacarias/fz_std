@@ -68,6 +68,8 @@
 #define ClampBot(X,B) Max(X,B)
 #define Clamp(val,min,Max) (((val)<(min))?(min):((val)>(Max))?(Max):(val))
 
+#define SwapPtr(type,ptrA,ptrB) Statement(type tmp = (*(ptrA)); *ptrA = (*(ptrB)); *ptrB = (tmp);)
+
 #define IntFromPtr(p) (u64)((u8*)p - (u8*)0)
 #define PtrFromInt(i) (void*)((u8*)0 + (i))
 #define Member(T,m) (((T*)0)->m)
@@ -101,13 +103,42 @@
 #define MemoryZeroStruct(ptr) MemoryZero((ptr), sizeof(*(ptr)))
 #define MemoryZeroArray(arr)  MemoryZero((arr), sizeof(arr))
 
-#define SetFlag(flags, flag)    ((flags) |= (flag))
+#define SetFlags(flags, flag)    ((flags) |= (flag))
 #define HasFlags(flags, check_flags) (((flags) & (check_flags)) == (check_flags))
 #define ToggleFlag(flags, flag) ((flags) ^= (flag))
 
 #define local_persist static
 #define global        static
 #define function      static
+
+#define DeferLoop(begin, end) for(u32 _defer_loop_internal_index_ = ((begin), 0); !_defer_loop_internal_index_; _defer_loop_internal_index_ += 1, (end))
+
+////////////////////////////////
+// Data structures
+
+// Singly-linked lists (Stacks)
+
+/* Stack implementation example:
+
+typedef struct Foo_Node Foo_Node;
+struct Foo_Node
+{
+  struct Foo_Node* next;
+  Foo_Type value;
+}
+
+typedef struct {
+  Foo_Node* top;  // Top of the stack (linked list)
+  Foo_Node* free; // Free list for reused nodes
+  Foo_Type  bot;  // Cached value at bottom of the stack
+} Foo_Stack;
+*/
+
+#define SLLStackPush_N(free,node,next) ((node)->next=(free), (free)=(node))
+#define SLLStackPop_N(free,next) ((free)=(free)->next)
+
+#define SLLStackPush(free,node) SLLStackPush_N(free,node,next)
+#define SLLStackPop(free)       SLLStackPop_N(free,next)
 
 ////////////////////////////////
 // Types 

@@ -1,5 +1,5 @@
 function b32
-os_opengl_init(OS_Window* window)
+os_opengl_init()
 {
   if (!_win32_load_wgl_functions())
   {
@@ -32,7 +32,7 @@ os_opengl_init(OS_Window* window)
 
     int format;
     UINT formats;
-    if (!wglChoosePixelFormatARB(window->device_context, attrib, NULL, 1, &format, &formats) || formats == 0)
+    if (!wglChoosePixelFormatARB(g_os_window.device_context, attrib, NULL, 1, &format, &formats) || formats == 0)
     {
       emit_fatal(S("OpenGL does not support required pixel format!"));
     }
@@ -58,12 +58,12 @@ os_opengl_init(OS_Window* window)
       0,
       0
     };
-    if(!DescribePixelFormat(window->device_context, format, sizeof(desc), &desc))
+    if(!DescribePixelFormat(g_os_window.device_context, format, sizeof(desc), &desc))
     {
       emit_error(S("Failed to describe OpenGL pixel format"));
     }
     
-    if (!SetPixelFormat(window->device_context, format, &desc))
+    if (!SetPixelFormat(g_os_window.device_context, format, &desc))
     {
       emit_fatal(S("Cannot set OpenGL selected pixel format!"));
     }
@@ -84,13 +84,13 @@ os_opengl_init(OS_Window* window)
       0,
     };
 
-    window->rendering_context = wglCreateContextAttribsARB(window->device_context, NULL, attrib);
-    if (!window->rendering_context)
+    g_os_window.rendering_context = wglCreateContextAttribsARB(g_os_window.device_context, NULL, attrib);
+    if (!g_os_window.rendering_context)
     {
       emit_fatal(S("Cannot create modern OpenGL context! OpenGL version 4.5 not supported?"));
     }
 
-    b32 ok = wglMakeCurrent(window->device_context, window->rendering_context);
+    b32 ok = wglMakeCurrent(g_os_window.device_context, g_os_window.rendering_context);
     if (!ok)
     {
       win32_check_error();
@@ -108,8 +108,8 @@ os_opengl_init(OS_Window* window)
   }
 
   // Set viewport
-  int width = window->dimensions.x;
-  int height = window->dimensions.y;
+  int width = g_os_window.dimensions.x;
+  int height = g_os_window.dimensions.y;
   glViewport(0, 0, width, height);
 
   // Check for errors
@@ -123,14 +123,14 @@ os_opengl_init(OS_Window* window)
 }
 
 function void
-os_opengl_end(OS_Window* window)
+os_opengl_end()
 {
   wglMakeCurrent(NULL, NULL);
-  wglDeleteContext(window->rendering_context);
+  wglDeleteContext(g_os_window.rendering_context);
 }
 
 function void
-os_window_enable_vsync(b32 state)
+os_window_set_vsync(b32 state)
 {
   wglSwapIntervalEXT(state);
 }
