@@ -247,7 +247,7 @@ RECENT REVISION HISTORY:
 //
 // I/O callbacks allow you to read from arbitrary sources, like packaged
 // files or some other source. Data read from callbacks are processed
-// through a small internal buffer (currently 128 bytes) to try to reduce
+// through a small function buffer (currently 128 bytes) to try to reduce
 // overhead.
 //
 // The three functions you must define are "read" (reads some bytes of data),
@@ -314,7 +314,7 @@ RECENT REVISION HISTORY:
 // iPhone PNG support:
 //
 // We optionally support converting iPhone-formatted PNGs (which store
-// premultiplied BGRA) back to RGB, even though they're internally encoded
+// premultiplied BGRA) back to RGB, even though they're functionly encoded
 // differently. To enable this conversion, call
 // stbi_convert_iphone_png_to_rgb(1).
 //
@@ -1736,7 +1736,7 @@ static stbi__uint32 stbi__get32le(stbi__context *s)
 //
 //  generic converter from built-in img_n to req_comp
 //    individual types do this automatically as much as possible (e.g. jpeg
-//    does all cases internally since it needs to colorspace convert anyway,
+//    does all cases functionly since it needs to colorspace convert anyway,
 //    and it never has alpha, so very few cases ). png can automatically
 //    interleave an alpha=255 channel, but falls back to this for other cases
 //
@@ -5381,11 +5381,11 @@ static int stbi__high_bit(unsigned int z)
 
 static int stbi__bitcount(unsigned int a)
 {
-   a = (a & 0x55555555) + ((a >>  1) & 0x55555555); // max 2
-   a = (a & 0x33333333) + ((a >>  2) & 0x33333333); // max 4
-   a = (a + (a >> 4)) & 0x0f0f0f0f; // max 8 per 4, now 8 bits
-   a = (a + (a >> 8)); // max 16 per 8 bits
-   a = (a + (a >> 16)); // max 32 per 8 bits
+   a = (a & 0x55555555) + ((a >>  1) & 0x55555555); // Max 2
+   a = (a & 0x33333333) + ((a >>  2) & 0x33333333); // Max 4
+   a = (a + (a >> 4)) & 0x0f0f0f0f; // Max 8 per 4, now 8 bits
+   a = (a + (a >> 8)); // Max 16 per 8 bits
+   a = (a + (a >> 16)); // Max 32 per 8 bits
    return a & 0xff;
 }
 
@@ -5478,7 +5478,7 @@ static void *stbi__bmp_parse_header(stbi__context *s, stbi__bmp_data *info)
       stbi__get32le(s); // discard hres
       stbi__get32le(s); // discard vres
       stbi__get32le(s); // discard colorsused
-      stbi__get32le(s); // discard max important
+      stbi__get32le(s); // discard Max important
       if (hsz == 40 || hsz == 56) {
          if (hsz == 56) {
             stbi__get32le(s);
@@ -5565,8 +5565,8 @@ static void *stbi__bmp_load(stbi__context *s, int *x, int *y, int *comp, int req
       // accept some number of extra bytes after the header, but if the offset points either to before
       // the header ends or implies a large amount of extra data, reject the file as malformed
       int bytes_read_so_far = s->callback_already_read + (int)(s->img_buffer - s->img_buffer_original);
-      int header_limit = 1024; // max we actually read is below 256 bytes currently.
-      int extra_data_limit = 256*4; // what ordinarily goes here is a palette; 256 entries*4 bytes is its max size.
+      int header_limit = 1024; // Max we actually read is below 256 bytes currently.
+      int extra_data_limit = 256*4; // what ordinarily goes here is a palette; 256 entries*4 bytes is its Max size.
       if (bytes_read_so_far <= 0 || bytes_read_so_far > header_limit) {
          return stbi__errpuc("bad header", "Corrupt BMP");
       }
@@ -6500,10 +6500,10 @@ static stbi_uc *stbi__pic_load_core(stbi__context *s,int width,int height,int *c
 static void *stbi__pic_load(stbi__context *s,int *px,int *py,int *comp,int req_comp, stbi__result_info *ri)
 {
    stbi_uc *result;
-   int i, x,y, internal_comp;
+   int i, x,y, function_comp;
    STBI_NOTUSED(ri);
 
-   if (!comp) comp = &internal_comp;
+   if (!comp) comp = &function_comp;
 
    for (i=0; i<92; ++i)
       stbi__get8(s);
@@ -7612,9 +7612,9 @@ static int      stbi__pnm_info(stbi__context *s, int *x, int *y, int *comp)
        return stbi__err("invalid width", "PPM image header had zero or overflowing width");
    stbi__pnm_skip_whitespace(s, &c);
 
-   maxv = stbi__pnm_getinteger(s, &c);  // read max value
+   maxv = stbi__pnm_getinteger(s, &c);  // read Max value
    if (maxv > 65535)
-      return stbi__err("max value > 65535", "PPM image supports only 8-bit and 16-bit images");
+      return stbi__err("Max value > 65535", "PPM image supports only 8-bit and 16-bit images");
    else if (maxv > 255)
       return 16;
    else
@@ -7825,7 +7825,7 @@ STBIDEF int stbi_is_16_bit_from_callbacks(stbi_io_callbacks const *c, void *user
       1.46  (2014-08-26)
               fix broken tRNS chunk (colorkey-style transparency) in non-paletted PNG
       1.45  (2014-08-16)
-              fix MSVC-ARM internal compiler error by wrapping malloc
+              fix MSVC-ARM function compiler error by wrapping malloc
       1.44  (2014-08-07)
               various warning fixes from Ronny Chevalier
       1.43  (2014-07-15)

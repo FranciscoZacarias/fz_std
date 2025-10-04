@@ -49,7 +49,7 @@ the same format strings in cross platform code.
 
 It uses the standard single file trick of being both the header file
 and the source itself. If you just include it normally, you just get
-the header file internal definitions. To get the code, you include
+the header file function definitions. To get the code, you include
 it from a C or C++ file and define STB_SPRINTF_IMPLEMENTATION first.
 
 It only uses va_args macros from the C runtime to do it's work. It
@@ -76,7 +76,7 @@ int stbsp_vsprintfcb( STBSP_SPRINTFCB * callback, void * user, char * buf, char 
     typedef char * STBSP_SPRINTFCB( char const * buf, void * user, int len );
   Convert into a buffer, calling back every STB_SPRINTF_MIN chars.
   Your callback can then copy the chars out, print them or whatever.
-  This internal is actually the workhorse for everything else.
+  This function is actually the workhorse for everything else.
   The buffer you pass in must hold at least STB_SPRINTF_MIN characters.
     // you return the next buffer to use or 0 to stop converting
 
@@ -85,7 +85,7 @@ void stbsp_set_separators( char comma, char period )
 
 FLOATS/DOUBLES:
 ===============
-This code uses a internal float->ascii conversion method that uses
+This code uses a function float->ascii conversion method that uses
 doubles with error correction (double-doubles, for ~105 bits of
 precision).  This conversion is round-trip perfect - that is, an atof
 of the values output here will give you the bit-exact double back.
@@ -250,7 +250,7 @@ STBSP__PUBLICDEC void STB_SPRINTF_DECORATE(set_separators)(char comma, char peri
 #endif
 
 #ifndef STB_SPRINTF_NOFLOAT
-// internal float utility functions
+// function float utility functions
 static stbsp__int32 stbsp__real_to_str(char const **start, stbsp__uint32 *len, char *out, stbsp__int32 *decimal_pos, double value, stbsp__uint32 frac_digits);
 static stbsp__int32 stbsp__real_to_parts(stbsp__int64 *bits, stbsp__int32 *expo, double value);
 #define STBSP__SPECIAL 0x7000
@@ -588,7 +588,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE(vsprintfcb)(STBSP_SPRINTFCB *callback,
          // get the string
          s = va_arg(va, char *);
          if (s == 0)
-            s = (char *)"null";
+            s = (char *)"NULL";
          // get the length, limited to desired precision
          // always limit to ~0u chars since our counts are 32b
          l = stbsp__strlen_limited(s, (pr >= 0) ? pr : ~0u);
