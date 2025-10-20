@@ -347,9 +347,6 @@ function void _input_process_mouse_cursor(Input_State* input, s32 x, s32 y); /* 
 ///////////////////////////////////////////////////////
 // @Section: Misc
 function String8 os_executable_path(Arena* arena); /* Returns the full executable path */
-function b32     os_path_exists(String8 path); /* Checks if a path exists */
-function b32     os_path_is_absolute(String8 path); /* Checks if a path is an absolute path */
-function String8 os_absolute_path_from_relative_path(Arena* arena, String8 relative_path); /* Returns the absolute path given a relative path */
 function String8 os_get_appdata_dir(Arena* arena, String8 project_name); /* Returns %appdata% path */
 function void    os_exit_process(u32 code); /* Ends current process with code <code> */
 

@@ -78,7 +78,6 @@ command_line_parse_from_argc_argv(s32 argc, u8** argv)
     for (s32 idx = 1; idx < argc; idx += 1)
     {
       String8 arg = string8_new(cstring_length(argv[idx]), argv[idx]);
-      arg = string8_concat(scratch.arena, arg, S(" "));
       string8_list_push(scratch.arena, &arg_list, arg);
     }
     String8 args = string8_list_join(scratch.arena, &arg_list);

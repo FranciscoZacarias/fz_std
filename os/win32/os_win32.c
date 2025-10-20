@@ -206,146 +206,25 @@ os_file_overwrite(String8 path, u8* data, u64 data_size)
   return (u32)written;
 }
 
-u32
+function u32
 os_file_append(String8 path, u8* data, u64 data_size)
 {
   Scratch scratch = scratch_begin(0, 0);
-
   u8 *cpath = cstring_from_string8(scratch.arena, path);
-
-  HANDLE file = CreateFileA(
-    (char*)cpath,
-    FILE_APPEND_DATA,
-    FILE_SHARE_READ,
-    0,
-    OPEN_ALWAYS,
-    FILE_ATTRIBUTE_NORMAL,
-    0);
-
-  if (file == INVALID_HANDLE_VALUE)
-  {
-    DWORD err = GetLastError();
-
-    LPSTR msg_buf = NULL;
-    DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                  FORMAT_MESSAGE_FROM_SYSTEM |
-                  FORMAT_MESSAGE_IGNORE_INSERTS;
-
-    FormatMessageA(flags,
-                   NULL,
-                   err,
-                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                   (LPSTR)&msg_buf,
-                   0,
-                   NULL);
-
-    if (msg_buf)
-    {
-      // trim trailing CR/LF
-      size_t mlen = strlen(msg_buf);
-      while (mlen > 0 && (msg_buf[mlen - 1] == '\n' || msg_buf[mlen - 1] == '\r'))
-      {
-        msg_buf[--mlen] = 0;
-      }
-    }
-
-    emit_error(Sf(scratch.arena,
-                  "CreateFileA failed for '%s' (err=%u). msg: %s",
-                  (char*)cpath,
-                  (unsigned)err,
-                  (msg_buf ? msg_buf : "Unknown error")));
-
-    if (msg_buf) LocalFree(msg_buf);
-    scratch_end(&scratch);
-    return 0;
-  }
-
-
-  // Move to end before append. Use SetFilePointerEx for 64-bit safety.
-  LARGE_INTEGER zero = {0};
-  if (!SetFilePointerEx(file, zero, NULL, FILE_END))
-  {
-    DWORD err = GetLastError();
-
-    LPSTR msg_buf = NULL;
-    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                   FORMAT_MESSAGE_IGNORE_INSERTS,
-                   NULL,
-                   err,
-                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                   (LPSTR)&msg_buf,
-                   0,
-                   NULL);
-
-    if (msg_buf)
-    {
-      size_t mlen = strlen(msg_buf);
-      while (mlen > 0 && (msg_buf[mlen - 1] == '\n' || msg_buf[mlen - 1] == '\r'))
-      {
-        msg_buf[--mlen] = 0;
-      }
-    }
-
-    emit_warn(Sf(scratch.arena,
-                 "SetFilePointerEx failed for '%s' (err=%u). msg: %s. Will attempt WriteFile anyway.",
-                 (char*)cpath,
-                 (unsigned)err,
-                 (msg_buf ? msg_buf : "Unknown error")));
-
-    if (msg_buf) LocalFree(msg_buf);
-  }
-
-  DWORD written = 0;
-  BOOL ok = WriteFile(file, data, (DWORD)data_size, &written, NULL);
-  if (!ok)
-  {
-    DWORD err = GetLastError();
-
-    LPSTR msg_buf = NULL;
-    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                   FORMAT_MESSAGE_IGNORE_INSERTS,
-                   NULL,
-                   err,
-                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                   (LPSTR)&msg_buf,
-                   0,
-                   NULL);
-
-    if (msg_buf)
-    {
-      size_t mlen = strlen(msg_buf);
-      while (mlen > 0 && (msg_buf[mlen - 1] == '\n' || msg_buf[mlen - 1] == '\r'))
-      {
-        msg_buf[--mlen] = 0;
-      }
-    }
-
-    emit_error(Sf(scratch.arena,
-                  "WriteFile failed for '%s' (err=%u). msg: %s",
-                  (char*)cpath,
-                  (unsigned)err,
-                  (msg_buf ? msg_buf : "Unknown error")));
-
-    if (msg_buf) LocalFree(msg_buf);
-    CloseHandle(file);
-    scratch_end(&scratch);
-    return 0;
-  }
-
-  if ((u64)written != data_size)
-  {
-    emit_warn(Sf(scratch.arena,
-                 "WriteFile wrote %u of %llu bytes for '%s'",
-                 (unsigned)written,
-                 (unsigned long long)data_size,
-                 (char*)cpath));
-  }
-
-  CloseHandle(file);
+  HANDLE file = CreateFileA(cpath, FILE_APPEND_DATA, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
   scratch_end(&scratch);
+
+  if(file == INVALID_HANDLE_VALUE)
+  {
+    return 0;
+  }
+
+  SetFilePointer(file, 0, 0, FILE_END);
+  DWORD written = 0;
+  WriteFile(file, data, (DWORD)data_size, &written, 0);
+  CloseHandle(file);
   return (u32)written;
 }
-
 
 function b32
 os_file_wipe(String8 path)
@@ -536,140 +415,6 @@ os_executable_path(Arena* arena)
   }
 
   return result;
-}
-
-function b32
-os_path_exists(String8 path)
-{
-  DWORD attr = GetFileAttributesA((u8*)path.str);
-  b32 result = (attr != INVALID_FILE_ATTRIBUTES);
-  return result;
-}
-
-function b32
-os_path_is_absolute(String8 path)
-{
-  b32 result = false;
-
-  if (path.size != 0 && 
-      path.str[0] == '/' || path.str[0] == '\\' && 
-      path.size > 2 && ((path.str[0] >= 'A' && path.str[0] <= 'Z') ||
-                        (path.str[0] >= 'a' && path.str[0] <= 'z')) &&
-      path.str[1] == ':')
-  {
-    result = true;
-  }
-
-  return false;
-}
-
-function String8
-os_absolute_path_from_relative_path(Arena* arena, String8 relative_path)
-{
-  if (os_path_is_absolute(relative_path))
-  {
-    // Still allocate for consistency
-    String8 result = string8_copy(arena, relative_path);
-    return result;
-  }
-
-  // Get executable path
-  String8 exe_path = os_executable_path(arena);
-
-  // Find last slash to isolate directory
-  u64 last_slash = 0;
-  for (u64 i = 0; i < exe_path.size; i++)
-  {
-    if (exe_path.str[i] == '/' || exe_path.str[i] == '\\')
-    {
-      last_slash = i;
-    }
-  }
-
-  String8 base_dir = {
-    .size = last_slash,
-    .str  = exe_path.str,
-  };
-
-  // Combine base dir + "/" + relative
-  u64 tmp_size = base_dir.size + 1 + relative_path.size;
-  u8 *tmp_str  = push_array(arena, u8, tmp_size + 1);
-  memcpy(tmp_str, base_dir.str, base_dir.size);
-  u64 offset = base_dir.size;
-
-  if (offset > 0 && base_dir.str[offset-1] != '/')
-  {
-    tmp_str[offset++] = '/';
-  }
-
-  memcpy(tmp_str + offset, relative_path.str, relative_path.size);
-  u64 combined_size = offset + relative_path.size;
-  tmp_str[combined_size] = 0;
-
-  // Normalize '\' -> '/'
-  for (u64 i = 0; i < combined_size; i++)
-  {
-    if (tmp_str[i] == '\\') tmp_str[i] = '/';
-  }
-
-  // Tokenize and resolve "." and ".."
-  u8 **parts = push_array(arena, u8*, combined_size/2 + 1);
-  u64 parts_count = 0;
-
-  u64 start = 0;
-  for (u64 i = 0; i <= combined_size; i++)
-  {
-    if (i == combined_size || tmp_str[i] == '/')
-    {
-      u64 len = i - start;
-      if (len > 0)
-      {
-        u8 *seg = tmp_str + start;
-
-        if (len == 1 && seg[0] == '.')
-        {
-          // skip "."
-        }
-        else if (len == 2 && seg[0] == '.' && seg[1] == '.')
-        {
-          // go up one directory
-          if (parts_count > 0) parts_count -= 1;
-        }
-        else
-        {
-          parts[parts_count++] = seg;
-          seg[len] = 0; // null terminate segment
-        }
-      }
-      start = i + 1;
-    }
-  }
-
-  // Rebuild canonical path
-  u64 final_size = 0;
-  for (u64 i = 0; i < parts_count; i++)
-  {
-    final_size += strlen((char*)parts[i]) + 1; // +1 for '/'
-  }
-
-  String8 abs_path;
-  abs_path.size = final_size;
-  abs_path.str  = push_array(arena, u8, final_size + 1);
-
-  u64 pos = 0;
-  for (u64 i = 0; i < parts_count; i++)
-  {
-    u64 len = strlen((char*)parts[i]);
-    memcpy(abs_path.str + pos, parts[i], len);
-    pos += len;
-    abs_path.str[pos++] = '/';
-  }
-
-  if (pos > 0) pos--; // remove trailing '/'
-  abs_path.size = pos;
-  abs_path.str[pos] = 0;
-
-  return abs_path;
 }
 
 function String8
@@ -1381,7 +1126,20 @@ _win32_window_create(HINSTANCE hInstance, s32 width, s32 height, String8 title)
   DWORD style   = WS_OVERLAPPEDWINDOW;
 
   Scratch scratch = scratch_begin(0, 0);
-  HWND result = CreateWindowExA(exstyle, wc.lpszClassName, cstring_from_string8(scratch.arena, title), style, CW_USEDEFAULT, CW_USEDEFAULT, width, height, NULL, NULL, wc.hInstance, NULL);
+  HWND result = CreateWindowExA(
+    exstyle,
+    wc.lpszClassName,
+    cstring_from_string8(scratch.arena, title),
+    style,
+    CW_USEDEFAULT,
+    CW_USEDEFAULT,
+    width,
+    height,
+    NULL,
+    NULL,
+    wc.hInstance,
+    NULL
+  );
   if (!result)
   {
     win32_check_error();

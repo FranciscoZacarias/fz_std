@@ -33,51 +33,6 @@ string8_concat(Arena* arena, String8 a, String8 b)
   return result;
 }
 
-function String8
-string8_replace_first(Arena* arena, String8 str, String8 a, String8 b)
-{
-  u64 index = 0;
-  if (!string8_find_first(str, a, &index))
-  {
-    return string8_copy(arena, str);
-  }
-
-  u64 new_size = str.size - a.size + b.size;
-  u8* mem = (u8*)arena_push(arena, new_size);
-  memcpy(mem, str.str, index);
-  memcpy(mem + index, b.str, b.size);
-  u64 after_size = str.size - (index + a.size);
-  memcpy(mem + index + b.size, str.str + index + a.size, after_size);
-
-  return (String8){ new_size, mem };
-}
-
-function String8
-string8_replace_all(Arena *arena, String8 str, String8 a, String8 b)
-{
-  if (a.size == 0) return string8_copy(arena, str);
-
-  String8 result = string8_copy(arena, str);
-  u64 index = 0;
-
-  while (string8_find_first(result, a, &index))
-  {
-    u64 new_size = result.size - a.size + b.size;
-    u8 *mem = (u8 *)arena_push(arena, new_size);
-
-    memcpy(mem, result.str, index);
-    memcpy(mem + index, b.str, b.size);
-    u64 after_size = result.size - (index + a.size);
-    memcpy(mem + index + b.size, result.str + index + a.size, after_size);
-
-    result.str = mem;
-    result.size = new_size;
-  }
-
-  return result;
-}
-
-
 function b32
 string8_match(String8 a, String8 b, b32 case_sensitive)
 {
@@ -117,26 +72,6 @@ string8_slice(String8 str, u64 start, u64 end)
 }
 
 function b32
-string8_find_first(String8 str, String8 substring, u64* index)
-{
-  if (substring.size == 0 || substring.size > str.size)
-  {
-    return 0;
-  }
-
-  for (u64 i = 0; i <= str.size - substring.size; i++)
-  {
-    if (MemoryMatch(str.str + i, substring.str, substring.size))
-    {
-      if (index) *index = i;
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
-function b32
 string8_find_last(String8 str, String8 substring, u64* index)
 {
   if (substring.size > str.size) return 0;
@@ -169,7 +104,7 @@ string8_from_format(Arena* arena, char const* fmt, ...)
   va_start(args, fmt);
 
   // Try to format into a fixed buffer first
-  char temp[Kilobytes(16)];
+  char temp[8192];
   int len = vsnprintf(temp, sizeof(temp), fmt, args);
   va_end(args);
 
@@ -285,7 +220,7 @@ string8_list_pop(String8_List* list)
 function void
 string8_list_push(Arena* arena, String8_List* list, String8 str)
 {
-  String8_Node* node = push_array(arena, String8_Node, 1);
+  String8_Node* node = push_array(arena, String8_Node, sizeof(String8_Node));
   node->value = str;
   if (!list->first && !list->last)
   {
@@ -449,14 +384,6 @@ char8_is_symbol(u8 c)
           c == '|' || c == '\\' || c == '{' || c == '}' || c == '(' ||
           c == ')' || c == '\\' || c == '[' || c == ']' || c == '#' ||
           c == ',' || c == ';'  || c == ':' || c == '@');
-}
-
-function b32
-char8_is_hexadecimal(u8 c)
-{
-  return char8_is_digit(c) ||
-         (c >= 'A' && c <= 'F') ||
-         (c >= 'a' && c <= 'f');
 }
 
 function b32
