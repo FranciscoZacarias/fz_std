@@ -1,6 +1,8 @@
 
 # (FZ) Personal standard library
 
+> New version at: https://github.com/FranciscoZacarias/fzac
+
 Basic structure:
 
 ```c
